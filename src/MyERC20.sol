@@ -32,13 +32,15 @@ contract MyERC20 {
   mapping(address => uint256) private balances;
   // slot 0x01
   mapping(address => mapping (address => uint256)) private allowances;
-
+  // slot 0x02
   uint256 private _currentSupply;
+  // slot 0x03
   uint256 private _maxSupply;
-
+  // slot 0x04
   string private _name;
+  // slot 0x05
   string private _symbol;
-
+  // slot 0x06
   address private _owner;
 
   // https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events
@@ -81,22 +83,22 @@ contract MyERC20 {
    */
   function owner() public view returns (address) {
     assembly {
-      mstore(0x00, sload(_owner.slot))
+      mstore(0x00, sload(0x06))
       return(0x00, 0x20)
     }
   }
 
   /**
    * @notice return the name of the contract
-   * string are not fixed to 32 bytes, if name > 32
-   * need to compute each slot and get the value
+   * @dev string are not fixed to 32 bytes, if name > 32
+   *      need to compute each slot and get the value
    */
   function name() external view returns (string memory) {
     string memory ptr;
     assembly {
       // load free memory ptr
       ptr := mload(0x40)
-      let slot := sload(_name.slot)
+      let slot := sload(0x04)
       switch and(slot, 1)
       // the name are in the same slot
       case 0 {
@@ -108,7 +110,7 @@ contract MyERC20 {
       }
       // the name is not on the same slot
       case 1 {
-        mstore(0x00, _name.slot)
+        mstore(0x00, 0x04)
         let startSlot := keccak256(0x00, 0x20)
         let size := shr(1, and(slot, 255))
         mstore(ptr, size)
@@ -129,13 +131,13 @@ contract MyERC20 {
 
   /**
    * @notice return the symbol of the contract
-   * see name() for more detail
+   * @dev see name() for more detail
    */
   function symbol() external view returns (string memory) {
     string memory ptr;
     assembly {
       ptr := mload(0x40)
-      let slot := sload(_symbol.slot)
+      let slot := sload(0x05)
       switch and(slot, 1)
       case 0 {
         let size := shr(1, and(slot, 255))
@@ -144,7 +146,7 @@ contract MyERC20 {
         mstore(0x40, add(add(ptr, 0x20), size))
       }
       case 1 {
-        mstore(0x00, _symbol.slot)
+        mstore(0x00, 0x05)
         let startSlot := keccak256(0x00, 0x20)
         let size := shr(1, and(slot, 255))
         mstore(ptr, size)
@@ -164,6 +166,8 @@ contract MyERC20 {
 
   /**
    * @notice mint (create new token) for a given address
+   * @dev _currentSupply.slot = 0x02
+   *      _maxSupply.slot = 0x03
    * @param _to address that will be credited the token
    * @param _quantity amount tha will be minted to the address _to
    */
@@ -179,19 +183,19 @@ contract MyERC20 {
         mstore(0x00, QUANTITY_ZERO)
         revert(0x00, 0x04)
       }
-      let newSupply := add(_quantity, sload(_currentSupply.slot))
+      let newSupply := add(_quantity, sload(0x02))
       // check if overflow
       if lt(newSupply, _quantity) {
         mstore(0x00, OVERFLOW)
         revert(0x00, 0x04)
       }
       // check supply dont reach max supply
-      if gt(newSupply, sload(_maxSupply.slot)) {
+      if gt(newSupply, sload(0x03)) {
         mstore(0x00, MAX_SUPPLY_REACH)
         revert(0x00, 0x04)
       }
       // store new currentSupply
-      sstore(_currentSupply.slot, newSupply)
+      sstore(0x02, newSupply)
       // populate mapping
       mstore(0x00, _to)
       mstore(0x20, 0x00) // use 0x00 because first storage slot or balances.slot
@@ -242,7 +246,7 @@ contract MyERC20 {
 
   /**
    * @notice approve a user to spend tokens
-   * if a user already have amount approved it will override
+   *         if a user already have amount approved it will override
    * @param spender address who can spend the allowance
    * @param amount amount the spender can spend
    */
@@ -265,7 +269,8 @@ contract MyERC20 {
   }
 
   /**
-   * burn an amount of tokens
+   * @notice burn an amount of tokens
+   * @dev _currentSupply = 0x02
    * @param _quantity amount token to burn
    */
   function _burn(uint256 _quantity) internal {
@@ -278,7 +283,7 @@ contract MyERC20 {
         mstore(0x00, INSUFFICIENT_BALANCE)
         revert(0x00, 0x04)
       }
-      sstore(_currentSupply.slot, sub(sload(_currentSupply.slot), _quantity))
+      sstore(0x02, sub(sload(0x02), _quantity))
       sstore(slot, sub(currentAmountCaller, _quantity))
       mstore(0x00, _quantity)
       log3(0x00, 0x20, TRANSFER_HASH, caller(), 0x00)
@@ -306,7 +311,7 @@ contract MyERC20 {
    */
   function totalSupply() external view returns (uint256) {
     assembly {
-      mstore(0x00, sload(_currentSupply.slot))
+      mstore(0x00, sload(0x02))
       return(0x00, 0x20)
     }
   }
@@ -326,11 +331,12 @@ contract MyERC20 {
   }
 
   /**
-   * get the max supply that can be minted
+   * @notice get the max supply that can be minted
+   * @dev _maxSupply.slot = 0x03
    */
   function maxSupply() external view returns (uint256) {
     assembly {
-      mstore(0x00, sload(_maxSupply.slot))
+      mstore(0x00, sload(0x03))
       return(0x00, 0x20)
     }
   }
