@@ -19,6 +19,8 @@ bytes32 constant OVERFLOW = 0x004264c3000000000000000000000000000000000000000000
 bytes32 constant TRANSFER_HASH = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
 // keccak256("Approval(address,address,uint256)")
 bytes32 constant APPROVAL_HASH = 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925;
+// keccak256("TransferOwnership(address,address)")
+bytes32 constant TRANSFER_OWNERSHIP_HASH = 0x5c486528ec3e3f0ea91181cff8116f02bfa350e03b8b6f12e00765adbb5af85c;
 
 /**
  * @title MyERC20
@@ -31,22 +33,25 @@ contract MyERC20 {
   // slot 0x01
   mapping(address => mapping (address => uint256)) private allowances;
 
-  uint256 _currentSupply;
-  uint256 _maxSupply;
+  uint256 private _currentSupply;
+  uint256 private _maxSupply;
 
-  string _name;
-  string _symbol;
+  string private _name;
+  string private _symbol;
 
-  address _owner;
+  address private _owner;
 
+  // https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#events
   event Transfer(address indexed from, address indexed to, uint256 value);
   event Approval(address indexed owner, address indexed spender, uint256 value);
+  event TransferOwnership(address indexed previousOwner, address indexed newOwner);
 
   constructor(string memory name_, string memory symbol_, uint256 maxSupply_) {
     _owner = msg.sender;
     _name = name_;
     _symbol = symbol_;
     _maxSupply = maxSupply_;
+    emit TransferOwnership(address(0), msg.sender);
   }
 
   modifier onlyOwner() {
@@ -57,6 +62,28 @@ contract MyERC20 {
       }
     }
     _;
+  }
+
+  /**
+   * @notice transfer the ownership to another address
+   * @param newOwner address of the new owner of the contract
+   */
+  function transferOwnership(address newOwner) public onlyOwner {
+    assembly {
+      let previousOwner := sload(_owner.slot)
+      sstore(_owner.slot, newOwner)
+      log3(0x00, 0x00, TRANSFER_OWNERSHIP_HASH, previousOwner, newOwner)
+    }
+  }
+
+  /**
+   * @notice get the owner f the contract
+   */
+  function owner() public view returns (address) {
+    assembly {
+      mstore(0x00, sload(_owner.slot))
+      return(0x00, 0x20)
+    }
   }
 
   /**
@@ -294,6 +321,16 @@ contract MyERC20 {
       mstore(0x20, 0x00)
       let slot := keccak256(0x00, 0x40)
       mstore(0x00, sload(slot))
+      return(0x00, 0x20)
+    }
+  }
+
+  /**
+   * get the max supply that can be minted
+   */
+  function maxSupply() external view returns (uint256) {
+    assembly {
+      mstore(0x00, sload(_maxSupply.slot))
       return(0x00, 0x20)
     }
   }

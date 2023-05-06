@@ -43,6 +43,7 @@ contract MyERC20Test is Test {
     console.logBytes32(keccak256("callerNotOwner()"));
     console.logBytes32(keccak256("overflow()"));
     console.logBytes32(keccak256("insufficientBalance()"));
+    console.logBytes32(keccak256("TransferOwnership(address,address)"));
   }
 
   function testMint() public {
@@ -115,5 +116,19 @@ contract MyERC20Test is Test {
 
   function testFailBurnInsufficientBalance() public {
     myERC20.burn(1 ether);
+  }
+
+  function testMaxSupply() public view {
+    uint256 maxSupply_ = myERC20.maxSupply();
+    require(maxSupply_ == maxSupply, "fail get maxSupply");
+  }
+
+  function testGetOwner() public view {
+    address _owner = myERC20.owner();
+    require(_owner == owner, "fail get owner");
+  }
+
+  function testTransferOwnership() public {
+    myERC20.transferOwnership(user1);
   }
 }
