@@ -1,0 +1,300 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.19;
+
+import { IERC20 } from "./Interfaces/IERC20.sol";
+
+// first 4 bit keccak256("addressZero()") 
+bytes32 constant ADDRESS_ZERO = 0x7299a72900000000000000000000000000000000000000000000000000000000;
+// first 4 bit keccak256("quantityZero()")
+bytes32 constant QUANTITY_ZERO = 0xb031b0f000000000000000000000000000000000000000000000000000000000;
+// first 4 bit keccak256("maxSupplyReach()")
+bytes32 constant MAX_SUPPLY_REACH = 0xc8f37d3300000000000000000000000000000000000000000000000000000000;
+// first 4 bit keccak256("callerNotOwner()")
+bytes32 constant CALLER_NOT_OWNER = 0xbbe424b900000000000000000000000000000000000000000000000000000000;
+// first 4 bit keccak256("insufficientBalance()")
+bytes32 constant INSUFFICIENT_BALANCE = 0x47108e3e00000000000000000000000000000000000000000000000000000000;
+// first 4 bit keccak256("overflow()")
+bytes32 constant OVERFLOW = 0x004264c300000000000000000000000000000000000000000000000000000000;
+// keccak256("Transfer(address,address,uint256)")
+bytes32 constant TRANSFER_HASH = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef;
+// keccak256("Approval(address,address,uint256)")
+bytes32 constant APPROVAL_HASH = 0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925;
+
+/**
+ * @title MyERC20
+ * @author chixx.eth
+ * @notice YUL ERC20 with ownable, mint, burn & a max supply
+ */
+contract MyERC20 {
+  // slot 0x00
+  mapping(address => uint256) private balances;
+  // slot 0x01
+  mapping(address => mapping (address => uint256)) private allowances;
+
+  uint256 _currentSupply;
+  uint256 _maxSupply;
+
+  string _name;
+  string _symbol;
+
+  address _owner;
+
+  event Transfer(address indexed from, address indexed to, uint256 value);
+  event Approval(address indexed owner, address indexed spender, uint256 value);
+
+  constructor(string memory name_, string memory symbol_, uint256 maxSupply_) {
+    _owner = msg.sender;
+    _name = name_;
+    _symbol = symbol_;
+    _maxSupply = maxSupply_;
+  }
+
+  modifier onlyOwner() {
+    assembly {
+      if iszero(eq(caller(), sload(_owner.slot))) {
+        mstore(0x00, CALLER_NOT_OWNER)
+        revert(0x00, 0x04)
+      }
+    }
+    _;
+  }
+
+  /**
+   * @notice return the name of the contract
+   * string are not fixed to 32 bytes, if name > 32
+   * need to compute each slot and get the value
+   */
+  function name() external view returns (string memory) {
+    string memory ptr;
+    assembly {
+      // load free memory ptr
+      ptr := mload(0x40)
+      let slot := sload(_name.slot)
+      switch and(slot, 1)
+      // the name are in the same slot
+      case 0 {
+        // shr for gas efficiency can also use div
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        mstore(add(ptr, 0x20), and(slot, not(255)))
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+      // the name is not on the same slot
+      case 1 {
+        mstore(0x00, _name.slot)
+        let startSlot := keccak256(0x00, 0x20)
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        // compute total memeory slot (size + 31) / 32
+        let totalSlot := shr(5, add(size, 0x1F))
+
+        // retrieve name
+        for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+          mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(add(startSlot, i)))
+        }
+        // store the name in free memory
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+    }
+    // return the ptr of the name in memory
+    return ptr;
+  }
+
+  /**
+   * @notice return the symbol of the contract
+   * see name() for more detail
+   */
+  function symbol() external view returns (string memory) {
+    string memory ptr;
+    assembly {
+      ptr := mload(0x40)
+      let slot := sload(_symbol.slot)
+      switch and(slot, 1)
+      case 0 {
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        mstore(add(ptr, 0x20), and(slot, not(255)))
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+      case 1 {
+        mstore(0x00, _symbol.slot)
+        let startSlot := keccak256(0x00, 0x20)
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        let totalSlot := shr(5, add(size, 0x1F))
+        for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+          mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(add(startSlot, i)))
+        }
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+    }
+    return ptr;
+  }
+
+  function mint(address _to, uint256 _quantity) external onlyOwner {
+    _mint(_to, _quantity);
+  }
+
+  /**
+   * @notice mint (create new token) for a given address
+   * @param _to address that will be credited the token
+   * @param _quantity amount tha will be minted to the address _to
+   */
+  function _mint(address _to, uint256 _quantity) internal {
+    assembly {
+      // if address zero revert with error addressZero();
+      if iszero(_to) {
+        mstore(0x00, ADDRESS_ZERO)
+        revert(0x00, 0x04)
+      }
+      // if quantity zero revert with error quantityZero();
+      if iszero(_quantity) {
+        mstore(0x00, QUANTITY_ZERO)
+        revert(0x00, 0x04)
+      }
+      let newSupply := add(_quantity, sload(_currentSupply.slot))
+      // check if overflow
+      if lt(newSupply, _quantity) {
+        mstore(0x00, OVERFLOW)
+        revert(0x00, 0x04)
+      }
+      // check supply dont reach max supply
+      if gt(newSupply, sload(_maxSupply.slot)) {
+        mstore(0x00, MAX_SUPPLY_REACH)
+        revert(0x00, 0x04)
+      }
+      // store new currentSupply
+      sstore(_currentSupply.slot, newSupply)
+      // populate mapping
+      mstore(0x00, _to)
+      mstore(0x20, 0x00) // use 0x00 because first storage slot or balances.slot
+      let slot := keccak256(0x00, 0x40)
+      sstore(slot, add(sload(slot), _quantity))
+      // emit event Transfer(address(0), _to, _quantity);
+      mstore(0x00, _quantity)
+      log3(0x00, 0x20, TRANSFER_HASH, 0x00, _to)
+    }
+  }
+
+  /**
+   * @notice transfer token from caller to receiver
+   * @param to address that receive the token
+   * @param amount amount token transfer to receiver
+   */
+  function transfer(address to, uint256 amount) external returns (bool) {
+    assembly {
+      mstore(0x00, caller())
+      mstore(0x20, 0x00)
+      let slotCaller := keccak256(0x00, 0x40)
+      let amountCaller := sload(slotCaller)
+      // check amount
+      if lt(amountCaller, amount) {
+        mstore(0x00, INSUFFICIENT_BALANCE)
+        revert(0x00, 0x04)
+      }
+      mstore(0x00, to)
+      let slotTo := keccak256(0x00, 0x40)
+      let amountTo := sload(slotTo)
+      // update new caller balance
+      sstore(slotCaller, sub(amountCaller, amount))
+      amountTo := add(amountTo, amount)
+      // check overflow
+      if lt(amountTo, amount) {
+        mstore(0x00, OVERFLOW)
+        revert(0x00, 0x04)
+      }
+      // update new to balance
+      sstore(slotTo, amountTo)
+      // emit Transfer event
+      mstore(0x00, amount)
+      log3(0x00, 0x20, TRANSFER_HASH, caller(), to)
+      mstore(0x00, 0x01)
+      return(0x00, 0x20)
+    }
+  }
+
+  /**
+   * @notice approve a user to spend tokens
+   * if a user already have amount approved it will override
+   * @param spender address who can spend the allowance
+   * @param amount amount the spender can spend
+   */
+  function approve(address spender, uint256 amount) external returns (bool) {
+    assembly {
+      mstore(0x00, caller())
+      mstore(0x20, 0x01)
+      mstore(0x20, keccak256(0x00, 0x40))
+      mstore(0x00, spender)
+      sstore(keccak256(0x00, 0x40), amount)
+      mstore(0x00, amount)
+      log3(0x00, 0x20, APPROVAL_HASH, caller(), spender)
+      mstore(0x00, 0x01)
+      return(0x00, 0x20)
+    }
+  }
+
+  function burn(uint256 _quantity) external {
+    _burn(_quantity);
+  }
+
+  /**
+   * burn an amount of tokens
+   * @param _quantity amount token to burn
+   */
+  function _burn(uint256 _quantity) internal {
+    assembly {
+      mstore(0x00, caller())
+      mstore(0x20, 0x00)
+      let slot := keccak256(0x00, 0x40)
+      let currentAmountCaller := sload(slot)
+      if lt(currentAmountCaller, _quantity) {
+        mstore(0x00, INSUFFICIENT_BALANCE)
+        revert(0x00, 0x04)
+      }
+      sstore(_currentSupply.slot, sub(sload(_currentSupply.slot), _quantity))
+      sstore(slot, sub(currentAmountCaller, _quantity))
+      mstore(0x00, _quantity)
+      log3(0x00, 0x20, TRANSFER_HASH, caller(), 0x00)
+    }
+  }
+
+  /**
+   * @notice get the approved value
+   * @param owner address that approve tokens
+   * @param spender address that can spend tokens
+   */
+  function allowance(address owner, address spender) external view returns (uint256) {
+    assembly {
+      mstore(0x00, owner)
+      mstore(0x20, 0x01)
+      mstore(0x20, keccak256(0x00, 0x40))
+      mstore(0x00, spender)
+      mstore(0x00, sload(keccak256(0x00, 0x40)))
+      return(0x00, 0x20)
+    }
+  }
+
+  /**
+   * @notice get the total circulating supply
+   */
+  function totalSupply() external view returns (uint256) {
+    assembly {
+      mstore(0x00, sload(_currentSupply.slot))
+      return(0x00, 0x20)
+    }
+  }
+
+  /**
+   * @notice get the balance of a given address
+   * @param account address to get the balance
+   */
+  function balanceOf(address account) external view returns (uint256) {
+    assembly {
+      mstore(0x00, account)
+      mstore(0x20, 0x00)
+      let slot := keccak256(0x00, 0x40)
+      mstore(0x00, sload(slot))
+      return(0x00, 0x20)
+    }
+  }
+}
