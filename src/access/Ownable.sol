@@ -10,7 +10,6 @@ bytes32 constant OWNER_SET_TO_ADDRESS_ZERO =
 bytes32 constant TRANSFER_OWNERSHIP_HASH = 
   0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0;
 
-
 contract Ownable {
   address private _owner;
 
@@ -33,7 +32,7 @@ contract Ownable {
   }
 
   /**
-   * @notice get the owner f the contract
+   * @notice get the owner of the contract
    */
   function owner() public view returns (address) {
     assembly {
@@ -42,6 +41,10 @@ contract Ownable {
     }
   }
 
+  /**
+   * @notice function for transfer ownership
+   * @param newOwner address of the new owner of the contract
+   */
   function transferOwnership(address newOwner) public onlyOwner {
     assembly {
       if eq(newOwner, 0x00) {
@@ -56,6 +59,10 @@ contract Ownable {
     _transferOwnership(address(0));
   }
 
+  /**
+   * @notice internal function for transfer ownership
+   * @param newOwner address of the new owner of the contract
+   */
   function _transferOwnership(address newOwner) internal {
     assembly {
       let previousOwner := sload(_owner.slot)
