@@ -48,4 +48,9 @@ contract OwnableTest is Test {
     vm.expectRevert(callerNotOwner.selector);
     ownable.transferOwnership(user1);
   }
+
+  function testTransferOwnershipFailToAddressZero() public {
+    vm.expectRevert(ownerSetToAddressZero.selector);
+    ownable.transferOwnership(address(0));
+  }
 }
