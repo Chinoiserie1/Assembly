@@ -53,4 +53,10 @@ contract OwnableTest is Test {
     vm.expectRevert(ownerSetToAddressZero.selector);
     ownable.transferOwnership(address(0));
   }
+
+  function testRenonceOwnership() public {
+    ownable.renounceOwnership();
+    address _owner = ownable.owner();
+    require(_owner == address(0), "fail renonce ownership");
+  }
 }
