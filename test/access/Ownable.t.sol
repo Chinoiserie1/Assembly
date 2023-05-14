@@ -5,6 +5,9 @@ import "forge-std/Test.sol";
 
 import "../../src/access/Ownable.sol";
 
+error ownerSetToAddressZero();
+error callerNotOwner();
+
 contract OwnableTest is Test {
   Ownable public ownable;
 
@@ -37,5 +40,12 @@ contract OwnableTest is Test {
     ownable.transferOwnership(user1);
     address _owner = ownable.owner();
     require(_owner == user1, "fail transfer ownership");
+  }
+
+  function testTransferOwnershipFailCallerNotOwner() public {
+    vm.stopPrank();
+    vm.startPrank(user1);
+    vm.expectRevert(callerNotOwner.selector);
+    ownable.transferOwnership(user1);
   }
 }

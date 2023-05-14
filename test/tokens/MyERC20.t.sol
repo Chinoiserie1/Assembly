@@ -42,7 +42,7 @@ contract MyERC20Test is Test {
     console.logBytes32(keccak256("overflow()"));
     console.logBytes32(keccak256("insufficientBalance()"));
     console.logBytes32(keccak256("OwnershipTransferred(address,address)"));
-    console.logBytes4(bytes4(keccak256("OwnerSetToAddressZero()")));
+    console.logBytes4(bytes4(keccak256("ownerSetToAddressZero()")));
   }
 
   function testMint() public {
