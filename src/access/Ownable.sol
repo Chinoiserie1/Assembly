@@ -52,6 +52,10 @@ contract Ownable {
     _transferOwnership(newOwner);
   }
 
+  function renounceOwnership() public onlyOwner {
+    _transferOwnership(address(0));
+  }
+
   function _transferOwnership(address newOwner) internal {
     assembly {
       let previousOwner := sload(_owner.slot)
