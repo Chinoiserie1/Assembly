@@ -2,9 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/MyERC20.sol";
-
-// error callerNotOwner();
+import "../../src/tokens/MyERC20.sol";
 
 contract MyERC20Test is Test {
   MyERC20 public myERC20;
@@ -43,7 +41,8 @@ contract MyERC20Test is Test {
     console.logBytes32(keccak256("callerNotOwner()"));
     console.logBytes32(keccak256("overflow()"));
     console.logBytes32(keccak256("insufficientBalance()"));
-    console.logBytes32(keccak256("TransferOwnership(address,address)"));
+    console.logBytes32(keccak256("OwnershipTransferred(address,address)"));
+    console.logBytes4(bytes4(keccak256("OwnerSetToAddressZero()")));
   }
 
   function testMint() public {
