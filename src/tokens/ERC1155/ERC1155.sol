@@ -32,11 +32,11 @@ contract ERC1155 {
    * transfers.
    */
   event TransferBatch(
-      address indexed operator,
-      address indexed from,
-      address indexed to,
-      uint256[] ids,
-      uint256[] values
+    address indexed operator,
+    address indexed from,
+    address indexed to,
+    uint256[] ids,
+    uint256[] values
   );
 
   /**
@@ -44,6 +44,15 @@ contract ERC1155 {
    * `approved`.
    */
   event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+
+  /**
+   * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
+   *
+   * If an {URI} event was emitted for `id`, the standard
+   * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
+   * returned by {IERC1155MetadataURI-uri}.
+   */
+  event URI(string value, uint256 indexed id);g
 
   constructor(string memory name_, string memory symbol_) {
     _name = name_;
