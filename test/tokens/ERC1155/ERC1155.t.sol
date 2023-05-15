@@ -31,6 +31,7 @@ contract ERC1155Test is Test {
 
   function testLog() public view {
     console.logBytes4(bytes4(keccak256("accountsAndIdsLengthMissmatch()")));
+    console.logBytes32(keccak256("ApprovalForAll(address,address,bool"));
   }
 
   function testERC1155() public {
@@ -53,5 +54,11 @@ contract ERC1155Test is Test {
     balance = erc1155.balanceOfBatch(ad, id);
     // console.log(balance[0]);
     // console.log(balance[1]);
+  }
+
+  function testApprovalForAll() public {
+    erc1155.setApprovalForAll(user1, true);
+    bool approved = erc1155.isApprovedForAll(owner, user1);
+    require(approved == true, "fail set approval for all");
   }
 }

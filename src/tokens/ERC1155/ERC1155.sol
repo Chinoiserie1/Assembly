@@ -10,12 +10,15 @@ import "forge-std/Test.sol";
 bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH = 
   0x06894ca700000000000000000000000000000000000000000000000000000000;
 
+bytes32 constant APPROVAL_FOR_ALL_HASH = 
+  0x625ed98187814316ab2cce6290cc517e4fa7fa0b604af464c9424177ee1a0ea2;
+
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
-  mapping(uint256 => mapping(address => uint256)) private _balances;
+  mapping(uint256 => mapping(address => uint256)) public _balances;
 
   // Mapping from account to operator approvals slot 0x01
-  mapping(address => mapping(address => bool)) private _operatorApprovals;
+  mapping(address => mapping(address => bool)) public _operatorApprovals;
 
   // slot 0x02
   string private _name;
@@ -175,6 +178,30 @@ contract ERC1155 {
       // store the new memory ptr
       mstore(0x40, add(add(balances, 0x20), mul(idZise, 0x20)))
     }
+  }
+
+  function setApprovalForAll(address operator, bool approved) external {
+    assembly {
+      mstore(0x00, caller())
+      mstore(0x20, 0x01)
+      mstore(0x20, keccak256(0x00, 0x40))
+      mstore(0x00, operator)
+      sstore(keccak256(0x00, 0x40), approved)
+      mstore(0x00, approved)
+      log3(0x00, 0x20, APPROVAL_FOR_ALL_HASH, caller(), operator)
+    }
+  }
+
+  function isApprovedForAll(address account, address operator) external view returns (bool) {
+    assembly {
+      mstore(0x00, account)
+      mstore(0x20, 0x01)
+      mstore(0x20, keccak256(0x00, 0x40))
+      mstore(0x00, operator)
+      mstore(0x00, sload(keccak256(0x00, 0x40)))
+      return(0x00, 0x20)
+    }
+
   }
 
   // for testgi
