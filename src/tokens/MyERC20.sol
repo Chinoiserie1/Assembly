@@ -121,7 +121,7 @@ contract MyERC20 {
         for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
           mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(add(startSlot, i)))
         }
-        // store the name in free memory
+        // store the new memory ptrg
         mstore(0x40, add(add(ptr, 0x20), size))
       }
     }
