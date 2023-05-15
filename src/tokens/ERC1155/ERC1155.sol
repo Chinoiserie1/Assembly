@@ -52,7 +52,7 @@ contract ERC1155 {
    * https://eips.ethereum.org/EIPS/eip-1155#metadata-extensions[guarantees] that `value` will equal the value
    * returned by {IERC1155MetadataURI-uri}.
    */
-  event URI(string value, uint256 indexed id);g
+  event URI(string value, uint256 indexed id);
 
   constructor(string memory name_, string memory symbol_) {
     _name = name_;
