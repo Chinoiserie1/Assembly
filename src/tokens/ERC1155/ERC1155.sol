@@ -62,7 +62,7 @@ contract ERC1155 {
         for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
           mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(add(startSlot, i)))
         }
-        // store the new memory ptrgi
+        // store the new memory ptr
         mstore(0x40, add(add(ptr, 0x20), size))
       }
     }
@@ -142,6 +142,6 @@ contract ERC1155 {
 
   // for testgi
   function mint(address user) external {
-    _balances[1][user] = 1 ether;
+    _balances[1][user] += 1 ether;
   }
 }
