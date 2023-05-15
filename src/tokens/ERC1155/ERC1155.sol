@@ -113,18 +113,18 @@ contract ERC1155 {
   }
 
   function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
-    external view returns (uint256[] memory)
+    external view returns (uint256[] memory balances)
   {
-    uint256[] memory ptr;
     assembly {
-      ptr := mload(0x40)
+      balances := mload(0x40)
       let accountSize := calldataload(0x44)
       let idZise := calldataload(add(0x04, calldataload(0x24)))
       if iszero(eq(accountSize, idZise)) {
         // revert code
         revert(0,0)
       }
-      mstore(ptr, idZise)
+      // store the size in the first slot
+      mstore(balances, idZise)
 
       for { let i := 0} lt(i, idZise) { i := add(i, 1) } {
         let account := calldataload(add(0x64, mul(i, 0x20)))
@@ -133,15 +133,14 @@ contract ERC1155 {
         mstore(0x20, 0x00)
         mstore(0x20, keccak256(0x00, 0x40))
         mstore(0x00, account)
-        // mstore(add(add(ptr, 0x20), mul(i, 0x20)), sload(keccak256(0x00, 0x40)))
-        mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(keccak256(0x00, 0x40)))
+        mstore(add(add(balances, 0x20), mul(0x20, i)), sload(keccak256(0x00, 0x40)))
       }
       // store the new memory ptr
-      mstore(0x40, add(add(ptr, 0x20), mul(idZise, 0x20)))
+      mstore(0x40, add(add(balances, 0x20), mul(idZise, 0x20)))
     }
-    return ptr;
   }
 
+  // for testgi
   function mint(address user) external {
     _balances[1][user] = 1 ether;
   }
