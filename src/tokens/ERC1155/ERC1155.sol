@@ -6,6 +6,10 @@ import "./IERC1155.sol";
 
 import "forge-std/Test.sol";
 
+// bytes4(keccak256("accountsAndIdsLengthMissmatch()"))
+bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH = 
+  0x06894ca700000000000000000000000000000000000000000000000000000000;
+
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
   mapping(uint256 => mapping(address => uint256)) private _balances;
@@ -17,6 +21,29 @@ contract ERC1155 {
   string private _name;
   // slot 0x03
   string private _symbol;
+
+  /**
+   * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
+   */
+  event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+
+  /**
+   * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
+   * transfers.
+   */
+  event TransferBatch(
+      address indexed operator,
+      address indexed from,
+      address indexed to,
+      uint256[] ids,
+      uint256[] values
+  );
+
+  /**
+   * @dev Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to
+   * `approved`.
+   */
+  event ApprovalForAll(address indexed account, address indexed operator, bool approved);
 
   constructor(string memory name_, string memory symbol_) {
     _name = name_;
@@ -121,7 +148,8 @@ contract ERC1155 {
       let idZise := calldataload(add(0x04, calldataload(0x24)))
       if iszero(eq(accountSize, idZise)) {
         // revert code
-        revert(0,0)
+        mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        revert(0x00,0x04)
       }
       // store the size in the first slot
       mstore(balances, idZise)

@@ -29,6 +29,10 @@ contract ERC1155Test is Test {
     erc1155 = new ERC1155(name, symbol);
   }
 
+  function testLog() public view {
+    console.logBytes4(bytes4(keccak256("accountsAndIdsLengthMissmatch()")));
+  }
+
   function testERC1155() public {
     erc1155.name();
     erc1155.mint(user1);
