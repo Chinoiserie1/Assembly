@@ -10,8 +10,18 @@ import "forge-std/Test.sol";
 bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH = 
   0x06894ca700000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("callFail()"))
+bytes32 constant CALL_FAIL = 0x076e644b00000000000000000000000000000000000000000000000000000000;
+
+// bytes4(keccak256("transferToNonERC1155Receiver()"))
+bytes32 constant TRANSFER_TO_NON_ERC1155_RECEIVER = 
+  0x7a40500d00000000000000000000000000000000000000000000000000000000;
+
 bytes32 constant APPROVAL_FOR_ALL_HASH = 
   0x625ed98187814316ab2cce6290cc517e4fa7fa0b604af464c9424177ee1a0ea2;
+
+bytes32 constant ON_ERC1155_RECEIVED_HASH =
+  0xf23a6e6100000000000000000000000000000000000000000000000000000000;
 
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
@@ -236,7 +246,38 @@ contract ERC1155 {
     bytes memory data
   ) private {
     assembly {
-      
+      // check if address to is a contract
+      if gt(extcodesize(to), 0) {
+        let ptr := mload(0x40)
+        // store call info
+        mstore(ptr, ON_ERC1155_RECEIVED_HASH)
+        mstore(add(ptr, 0x04), operator)
+        mstore(add(ptr, 0x24), from)
+        mstore(add(ptr, 0x44), id)
+        mstore(add(ptr, 0x64), amount)
+        // store the size of data
+        let size := mload(data)
+        mstore(add(ptr, 0x84), size)
+        let startSlot := add(ptr, 0xa4)
+        let totalSlot := shr(5, add(size, 0x1F))
+        // store all the data
+        for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+          mstore(add(startSlot, mul(i, 0x20)), mload(add(add(data, 0x20), mul(i, 0x20))))
+        }
+        let totalSize := add(0x84, mul(totalSlot, 0x20))
+        // perform call
+        let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
+        if iszero(callstatus) {
+          mstore(0x00, CALL_FAIL)
+          revert(0x00, 0x04)
+        }
+        if iszero(and(mload(0x00),  ON_ERC1155_RECEIVED_HASH)) {
+          mstore(0x00, TRANSFER_TO_NON_ERC1155_RECEIVER)
+          revert(0x00, 0x04)
+        }
+        // store the new memory ptr
+        mstore(0x40, add(ptr, totalSize))
+      }
     }
   }
 }

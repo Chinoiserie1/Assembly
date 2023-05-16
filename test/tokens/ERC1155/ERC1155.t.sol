@@ -5,9 +5,24 @@ import "forge-std/Test.sol";
 
 import "../../../src/tokens/ERC1155/ERC1155.sol";
 
+contract ERC1155Receiver {
+   function onERC1155Received(
+    address _operator,
+    address _from,
+    uint256 _id,
+    uint256 _value,
+    bytes calldata _data)
+    external returns(bytes4)
+  {
+    return 0xf23a6e61;
+  }
+}
+
 contract ERC1155Test is Test {
   ERC1155 public erc1155;
-  string name = "nameTestAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+  ERC1155Receiver public erc1155Receiver;
+
+  string name = "nameTest";
   string symbol = "NTST";
   uint256 maxSupply = 1000000 ether;
 
@@ -27,11 +42,14 @@ contract ERC1155Test is Test {
     user2 = vm.addr(user2PrivateKey);
     vm.startPrank(owner);
     erc1155 = new ERC1155(name, symbol);
+    erc1155Receiver = new ERC1155Receiver();
   }
 
   function testLog() public view {
     console.logBytes4(bytes4(keccak256("accountsAndIdsLengthMissmatch()")));
     console.logBytes32(keccak256("ApprovalForAll(address,address,bool"));
+    console.logBytes4(bytes4(keccak256("callFail()")));
+    console.logBytes4(bytes4(keccak256("transferToNonERC1155Receiver()")));
   }
 
   function testERC1155() public {
@@ -60,5 +78,9 @@ contract ERC1155Test is Test {
     erc1155.setApprovalForAll(user1, true);
     bool approved = erc1155.isApprovedForAll(owner, user1);
     require(approved == true, "fail set approval for all");
+  }
+
+  function testERC1155Bis() public {
+    erc1155.mint(user1);
   }
 }
