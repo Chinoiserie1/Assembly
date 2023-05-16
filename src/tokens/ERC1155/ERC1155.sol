@@ -226,4 +226,17 @@ contract ERC1155 {
     uint256[] memory amounts,
     bytes memory data
   ) internal virtual {}
+
+  function _doSafeTransferAcceptanceCheck(
+    address operator,
+    address from,
+    address to,
+    uint256 id,
+    uint256 amount,
+    bytes memory data
+  ) private {
+    assembly {
+      
+    }
+  }
 }

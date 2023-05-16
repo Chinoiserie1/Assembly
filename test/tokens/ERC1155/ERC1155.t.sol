@@ -42,15 +42,15 @@ contract ERC1155Test is Test {
     uint256 balanceuser1 = erc1155.balanceOf(user1, 1);
     console.log(balanceuser1);
 
-    address[] memory ad = new address[](3);
+    address[] memory ad = new address[](1);
     ad[0] = user1;
-    ad[1] = user2;
-    ad[2] = user1;
-    uint256[] memory id = new uint256[](3);
+    // ad[1] = user2;
+    // ad[2] = user1;
+    uint256[] memory id = new uint256[](1);
     id[0] = 1;
-    id[1] = 1;
-    id[2] = 1;
-    uint256[] memory balance = new uint256[](3);
+    // id[1] = 1;
+    // id[2] = 1;
+    uint256[] memory balance = new uint256[](1);
     balance = erc1155.balanceOfBatch(ad, id);
     // console.log(balance[0]);
     // console.log(balance[1]);
