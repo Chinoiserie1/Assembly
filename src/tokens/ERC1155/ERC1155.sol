@@ -13,6 +13,10 @@ bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH =
 // bytes4(keccak256("callFail()"))
 bytes32 constant CALL_FAIL = 0x076e644b00000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("transferToZeroAddress()"))
+bytes32 constant TRANSFER_TO_ZERO_ADDRESS = 
+  0xec87facc00000000000000000000000000000000000000000000000000000000;
+
 // bytes4(keccak256("transferToNonERC1155Receiver()"))
 bytes32 constant TRANSFER_TO_NON_ERC1155_RECEIVER = 
   0x7a40500d00000000000000000000000000000000000000000000000000000000;
@@ -20,7 +24,7 @@ bytes32 constant TRANSFER_TO_NON_ERC1155_RECEIVER =
 bytes32 constant APPROVAL_FOR_ALL_HASH = 
   0x625ed98187814316ab2cce6290cc517e4fa7fa0b604af464c9424177ee1a0ea2;
 
-bytes32 constant ON_ERC1155_RECEIVED_HASH =
+bytes32 constant ON_ERC1155_RECEIVED =
   0xf23a6e6100000000000000000000000000000000000000000000000000000000;
 
 contract ERC1155 {
@@ -214,6 +218,30 @@ contract ERC1155 {
 
   }
 
+  function safeTransferFrom(
+    address from,
+    address to,
+    uint256 id,
+    uint256 amount,
+    bytes calldata data) 
+    external
+  {
+    address operator = msg.sender;
+    uint256[] memory ids = _asSingletonArray(id);
+    uint256[] memory amounts = _asSingletonArray(amount);
+    _beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+    assembly {
+      if iszero(to) {
+        mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
+    }
+
+    _afterTokenTransfer(operator, from, to, ids, amounts, data);
+    _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
+  }
+
   // for testgi
   function mint(address user) external {
     _balances[1][user] += 1 ether;
@@ -250,7 +278,7 @@ contract ERC1155 {
       if gt(extcodesize(to), 0) {
         let ptr := mload(0x40)
         // store call info
-        mstore(ptr, ON_ERC1155_RECEIVED_HASH)
+        mstore(ptr, ON_ERC1155_RECEIVED)
         mstore(add(ptr, 0x04), operator)
         mstore(add(ptr, 0x24), from)
         mstore(add(ptr, 0x44), id)
@@ -264,14 +292,14 @@ contract ERC1155 {
         for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
           mstore(add(startSlot, mul(i, 0x20)), mload(add(add(data, 0x20), mul(i, 0x20))))
         }
-        let totalSize := add(0x84, mul(totalSlot, 0x20))
+        let totalSize := add(0xa4, mul(totalSlot, 0x20))
         // perform call
         let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
         if iszero(callstatus) {
           mstore(0x00, CALL_FAIL)
           revert(0x00, 0x04)
         }
-        if iszero(and(mload(0x00),  ON_ERC1155_RECEIVED_HASH)) {
+        if iszero(and(mload(0x00),  ON_ERC1155_RECEIVED)) {
           mstore(0x00, TRANSFER_TO_NON_ERC1155_RECEIVER)
           revert(0x00, 0x04)
         }
@@ -279,5 +307,13 @@ contract ERC1155 {
         mstore(0x40, add(ptr, totalSize))
       }
     }
+  }
+
+  // need to convert to assembly
+  function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
+    uint256[] memory array = new uint256[](1);
+    array[0] = element;
+
+    return array;
   }
 }

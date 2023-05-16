@@ -22,7 +22,7 @@ contract ERC1155Test is Test {
   ERC1155 public erc1155;
   ERC1155Receiver public erc1155Receiver;
 
-  string name = "nameTest";
+  string name = "nameTestAAAAAAAAAAAAAAAAAAnameTestAAAAAAAAAAAAAAAAAA";
   string symbol = "NTST";
   uint256 maxSupply = 1000000 ether;
 
@@ -50,6 +50,7 @@ contract ERC1155Test is Test {
     console.logBytes32(keccak256("ApprovalForAll(address,address,bool"));
     console.logBytes4(bytes4(keccak256("callFail()")));
     console.logBytes4(bytes4(keccak256("transferToNonERC1155Receiver()")));
+    console.logBytes4(bytes4(keccak256("transferToZeroAddress()")));
   }
 
   function testERC1155() public {
@@ -82,5 +83,6 @@ contract ERC1155Test is Test {
 
   function testERC1155Bis() public {
     erc1155.mint(user1);
+    erc1155.name();
   }
 }
