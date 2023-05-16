@@ -217,4 +217,13 @@ contract ERC1155 {
     uint256[] memory amounts,
     bytes memory data
   ) internal {}
+
+  function _afterTokenTransfer(
+    address operator,
+    address from,
+    address to,
+    uint256[] memory ids,
+    uint256[] memory amounts,
+    bytes memory data
+  ) internal virtual {}
 }
