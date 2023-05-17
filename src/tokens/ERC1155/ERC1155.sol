@@ -17,13 +17,26 @@ bytes32 constant CALL_FAIL = 0x076e644b00000000000000000000000000000000000000000
 bytes32 constant TRANSFER_TO_ZERO_ADDRESS = 
   0xec87facc00000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("insufficientBalance()"))
+bytes32 constant INSUFFICIENT_BALANCE = 
+  0x47108e3e00000000000000000000000000000000000000000000000000000000;
+
+// bytes4(keccak256("overflow()"))
+bytes32 constant OVERFLOW = 0x004264c300000000000000000000000000000000000000000000000000000000;
+
 // bytes4(keccak256("transferToNonERC1155Receiver()"))
 bytes32 constant TRANSFER_TO_NON_ERC1155_RECEIVER = 
   0x7a40500d00000000000000000000000000000000000000000000000000000000;
 
+// keccak256("ApprovalForAll(address,address,bool")
 bytes32 constant APPROVAL_FOR_ALL_HASH = 
   0x625ed98187814316ab2cce6290cc517e4fa7fa0b604af464c9424177ee1a0ea2;
 
+// keccak256("TransferSingle(address,address,address,uint256,uint256")
+bytes32 constant TRANSFER_SINGLE_HASH = 
+ 0x98ea26c645da631969c0365e44ecca019bd178fcf0731141b45bf3aa2d57a8a2;
+
+// bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
 bytes32 constant ON_ERC1155_RECEIVED =
   0xf23a6e6100000000000000000000000000000000000000000000000000000000;
 
@@ -236,6 +249,30 @@ contract ERC1155 {
         mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
         revert(0x00, 0x04)
       }
+      // from balance
+      mstore(0x00, id)
+      mstore(0x20, 0x00) // store _balances.slot
+      mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
+      mstore(0x00, from)
+      let ptrFrom := keccak256(0x00, 0x40)
+      let fromBalance := sload(ptrFrom)
+      if lt(fromBalance, amount) {
+        mstore(0x00, INSUFFICIENT_BALANCE)
+        revert(0x00, 0x04)
+      }
+      sstore(ptrFrom, sub(fromBalance, amount))
+      mstore(0x00, to)
+      let ptrTo := keccak256(0x00, 0x40)
+      let toBalance := sload(ptrTo)
+      sstore(ptrTo, add(toBalance, amount))
+      if lt(add(toBalance, amount), toBalance) {
+        mstore(0x00, OVERFLOW)
+        revert(0x00, 0x04)
+      }
+      // emit event
+      mstore(0x00, id)
+      mstore(0x20, amount)
+      log4(0x00, 0x40, TRANSFER_SINGLE_HASH, operator, from, to)
     }
 
     _afterTokenTransfer(operator, from, to, ids, amounts, data);

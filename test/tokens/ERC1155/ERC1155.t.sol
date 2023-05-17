@@ -51,6 +51,9 @@ contract ERC1155Test is Test {
     console.logBytes4(bytes4(keccak256("callFail()")));
     console.logBytes4(bytes4(keccak256("transferToNonERC1155Receiver()")));
     console.logBytes4(bytes4(keccak256("transferToZeroAddress()")));
+    console.logBytes4(bytes4(keccak256("insufficientBalance()")));
+    console.logBytes4(bytes4(keccak256("overflow()")));
+    console.logBytes32(keccak256("TransferSingle(address,address,address,uint256,uint256"));
   }
 
   function testERC1155() public {
