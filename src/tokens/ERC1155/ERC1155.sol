@@ -28,13 +28,21 @@ bytes32 constant OVERFLOW = 0x004264c3000000000000000000000000000000000000000000
 bytes32 constant TRANSFER_TO_NON_ERC1155_RECEIVER = 
   0x7a40500d00000000000000000000000000000000000000000000000000000000;
 
-// keccak256("ApprovalForAll(address,address,bool")
-bytes32 constant APPROVAL_FOR_ALL_HASH = 
-  0x625ed98187814316ab2cce6290cc517e4fa7fa0b604af464c9424177ee1a0ea2;
+// bytes4(keccak256("operatorNotApproved()"))
+bytes32 constant OPERATOR_NOT_APPROVED = 
+ 0xa207e75400000000000000000000000000000000000000000000000000000000;
 
-// keccak256("TransferSingle(address,address,address,uint256,uint256")
+// keccak256("ApprovalForAll(address,address,bool)")
+bytes32 constant APPROVAL_FOR_ALL_HASH = 
+  0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31;
+
+// keccak256("TransferSingle(address,address,address,uint256,uint256)")
 bytes32 constant TRANSFER_SINGLE_HASH = 
- 0x98ea26c645da631969c0365e44ecca019bd178fcf0731141b45bf3aa2d57a8a2;
+ 0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62;
+
+// keccak256("TransferBatch(address,address,address,uint256[],uint256[])")
+bytes32 constant TRANSFER_BATCH_HASH =
+  0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb;
 
 // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
 bytes32 constant ON_ERC1155_RECEIVED =
@@ -51,11 +59,19 @@ contract ERC1155 {
   string private _name;
   // slot 0x03
   string private _symbol;
+  // slot 0x04
+  string private _uri;
 
   /**
    * @dev Emitted when `value` tokens of token type `id` are transferred from `from` to `to` by `operator`.
    */
-  event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+  event TransferSingle(
+    address indexed operator,
+    address indexed from,
+    address indexed to,
+    uint256 id,
+    uint256 value
+  );
 
   /**
    * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
@@ -178,6 +194,7 @@ contract ERC1155 {
     }
   }
 
+  // need to change with offset and length
   function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
     external view returns (uint256[] memory balances)
   {
@@ -249,6 +266,17 @@ contract ERC1155 {
         mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
         revert(0x00, 0x04)
       }
+      // check if approved
+      if iszero(eq(operator, from)) {
+        mstore(0x00, from)
+        mstore(0x20, 0x01)
+        mstore(0x20, keccak256(0x00, 0x40))
+        mstore(0x00, operator)
+        if iszero(sload(keccak256(0x00, 0x40))) {
+          mstore(0x00, OPERATOR_NOT_APPROVED)
+          revert(0x00, 0x04)
+        }
+      }
       // from balance
       mstore(0x00, id)
       mstore(0x20, 0x00) // store _balances.slot
@@ -279,9 +307,92 @@ contract ERC1155 {
     _doSafeTransferAcceptanceCheck(operator, from, to, id, amount, data);
   }
 
-  // for testgi
-  function mint(address user) external {
-    _balances[1][user] += 1 ether;
+  function safeBatchTransferFrom(
+    address from,
+    address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+  ) external
+  {
+    address operator = msg.sender;
+    _beforeTokenTransfer(operator, from, to, ids, amounts, data);
+
+    bytes32 log;
+    assembly {
+      let ptr := mload(0x40)
+      // check size ids & amounts
+      if iszero(eq(ids.length, amounts.length)) {
+        mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        revert(0x00,0x04)
+      }
+      // check if approved
+      if iszero(eq(operator, from)) {
+        mstore(0x00, from)
+        mstore(0x20, 0x01)
+        mstore(0x20, keccak256(0x00, 0x40))
+        mstore(0x00, operator)
+        if iszero(sload(keccak256(0x00, 0x40))) {
+          mstore(0x00, OPERATOR_NOT_APPROVED)
+          revert(0x00, 0x04)
+        }
+      }
+      // store ids and amounts length for emit event
+      mstore(ptr, ids.length)
+      let ptrStartAmountEvent := add(add(ptr, 0x20), mul(ids.length, 0x20))
+      mstore(ptrStartAmountEvent, amounts.length)
+
+      for { let i := 0 } lt(i, ids.length) { i := add(i, 1) } {
+        let id := calldataload(add(ids.offset, mul(i, 0x20)))
+        let amount := calldataload(add(amounts.offset, mul(i, 0x20)))
+        // check balance
+        mstore(0x00, id)
+        mstore(0x20, 0x00) // store _balances.slot
+        mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
+        mstore(0x00, from)
+        let ptrFrom := keccak256(0x00, 0x40)
+        let fromBalance := sload(ptrFrom)
+        if lt(fromBalance, amount) {
+          mstore(0x00, INSUFFICIENT_BALANCE)
+          revert(0x00, 0x04)
+        }
+        // store the new balance
+        sstore(ptrFrom, sub(fromBalance, amount))
+        // compute balance to
+        mstore(0x00, to)
+        let ptrTo := keccak256(0x00, 0x40)
+        let toBalance := sload(ptrTo)
+        // store the new balance to
+        sstore(ptrTo, add(toBalance, amount))
+        // check overflow
+        if lt(add(toBalance, amount), toBalance) {
+          mstore(0x00, OVERFLOW)
+          revert(0x00, 0x04)
+        }
+        // store id for emit event
+        mstore(add(add(ptr, 0x20), mul(i, 0x20)), id)
+        // store amount for emit event
+        mstore(add(add(ptrStartAmountEvent, 0x20), mul(i, 0x20)), amount)
+      }
+      log4(
+        ptr,
+        add(0x40, add(mul(ids.length, 0x20), mul(amounts.length, 0x20))),
+        TRANSFER_BATCH_HASH,
+        operator,
+        from,
+        to
+      )
+      // store the new memory ptr
+      mstore(0x40, add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)))
+    }
+    console.logBytes32(log);
+
+    _afterTokenTransfer(operator, from, to, ids, amounts, data);
+  }
+
+  // for test purpose
+  function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal {
+    _balances[id][to] += amount;
   }
 
   function _beforeTokenTransfer(
