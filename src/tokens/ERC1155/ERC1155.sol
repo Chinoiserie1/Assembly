@@ -374,9 +374,11 @@ contract ERC1155 {
         // store amount for emit event
         mstore(add(add(ptrStartAmountEvent, 0x20), mul(i, 0x20)), amount)
       }
+      mstore(0x00, ptr)
+      mstore(0x20, ptrStartAmountEvent)
       log4(
-        ptr,
-        add(0x40, add(mul(ids.length, 0x20), mul(amounts.length, 0x20))),
+        0x00,
+        add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)),
         TRANSFER_BATCH_HASH,
         operator,
         from,
