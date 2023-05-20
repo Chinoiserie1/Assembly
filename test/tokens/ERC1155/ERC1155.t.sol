@@ -104,6 +104,11 @@ contract ERC1155Test is Test {
     require(balance == 100, "fail mint");
   }
 
+  function testMintFailToAddressZero() public {
+    vm.expectRevert(transferToZeroAddress.selector);
+    testERC1155.mint(address(0), 1, 100, "");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
