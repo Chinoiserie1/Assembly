@@ -479,7 +479,7 @@ contract ERC1155 {
     bytes32 log;
     assembly {
       let ptr := mload(0x40)
-      log := ptr
+      // log := ptr
       // check if address to is a contract
       if gt(extcodesize(to), 0) {
         // get start pointer of ids & amounts
@@ -490,9 +490,41 @@ contract ERC1155 {
         mstore(ptr, ON_ERC1155_BATCH_RECEIVED)
         mstore(add(ptr, 0x04), operator)
         mstore(add(ptr, 0x24), from)
-        mstore(add(ptr, 0x44), startIdsPtr)
-        mstore(add(ptr, 0x64), startAmountsPtr)
-        mstore(add(ptr, 0x64), startDataPtr)
+        mstore(add(ptr, 0x44), 0xa0)
+        mstore(add(ptr, 0x64), add(0xc0, mul(ids.length, 0x20)))
+        mstore(add(ptr, 0x84), add(add(0xe0, mul(ids.length, 0x20)), mul(amounts.length, 0x20)))
+        // store size ids, amounts & data
+        mstore(startIdsPtr, ids.length)
+        mstore(startAmountsPtr, amounts.length)
+        mstore(startDataPtr, data.length)
+        // store ids & amounts datas
+        for { let i := 0 } lt(i, ids.length) { i := add(i, 1) } {
+          mstore(add(add(startIdsPtr, 0x20), mul(i, 0x20)), calldataload(add(ids.offset, mul(i, 0x20))))
+          mstore(add(add(startAmountsPtr, 0x20), mul(i, 0x20)), calldataload(add(amounts.offset, mul(i, 0x20))))
+        }
+        // get total slot of data
+        let totalSlotData := shr(5, add(data.length, 0x1F))
+        // store data datas
+        for { let i := 0} lt(i, totalSlotData) { i := add(i, 1) } {
+          mstore(add(add(startDataPtr, 0x20), mul(i, 0x20)), calldataload(add(data.offset, mul(i, 0x20))))
+        }
+        // [0xa4 + 0x60 = call info + size * (ids, amounts, data)] + length ids, amounts, data
+        let totalSize := add(0x104, add(mul(2, mul(ids.length, 0x20)), mul(totalSlotData, 0x20)))
+
+        log := mload(add(ptr, 0x44))
+
+        // perform call
+        let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
+        if iszero(callstatus) {
+          mstore(0x00, CALL_FAIL)
+          revert(0x00, 0x04)
+        }
+        if iszero(and(mload(0x00),  ON_ERC1155_BATCH_RECEIVED)) {
+          mstore(0x00, TRANSFER_TO_NON_ERC1155_RECEIVER)
+          revert(0x00, 0x04)
+        }
+        // store the new memory ptr
+        mstore(0x40, add(ptr, totalSize))
       }
     }
     console.logBytes32(log);

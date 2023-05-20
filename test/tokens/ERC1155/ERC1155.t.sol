@@ -96,9 +96,10 @@ contract ERC1155Test is Test {
     uint256[] memory amounts = new uint256[](2);
     amounts[0] = 20;
     amounts[1] = 50;
-    testERC1155.safeBatchTransferFrom(user1, user2, ids, amounts, "");
-    testERC1155.balanceOf(user2, 1);
-    testERC1155.balanceOf(user2, 2);
+    // testERC1155.safeBatchTransferFrom(user1, user2, ids, amounts, "");
+    // testERC1155.balanceOf(user2, 1);
+    // testERC1155.balanceOf(user2, 2);
+    testERC1155.safeBatchTransferFrom(user1, address(erc1155Receiver), ids, amounts, "");
   }
 
   function testApprovalForAll() public {
