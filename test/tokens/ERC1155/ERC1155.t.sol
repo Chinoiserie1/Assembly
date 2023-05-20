@@ -157,9 +157,14 @@ contract ERC1155Test is Test {
     vm.stopPrank();
     vm.startPrank(user1);
     vm.expectRevert(transferToZeroAddress.selector);
+    testERC1155.safeTransferFrom(user1, address(0), 1, 10, "");
+  }
+
+  function testERC1155SafeTransferFromFailInsuficientBalance() public {
     vm.stopPrank();
     vm.startPrank(user1);
-    testERC1155.safeTransferFrom(user1, address(0), 1, 10, "");
+    vm.expectRevert(insufficientBalance.selector);
+    testERC1155.safeTransferFrom(user1, user2, 1, 10, "");
   }
 
   function testERC1155SafeTransferFromToERC1155ReceiverContract() public {
