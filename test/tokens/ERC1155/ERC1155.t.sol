@@ -62,6 +62,14 @@ contract ERC1155Test is Test {
   int256 internal user3PrivateKey;
   address internal user3;
 
+  event TransferSingle(
+    address indexed operator,
+    address indexed from,
+    address indexed to,
+    uint256 id,
+    uint256 value
+  );
+
   function setUp() public {
     ownerPrivateKey = 0xA11CE;
     owner = vm.addr(ownerPrivateKey);
@@ -106,6 +114,14 @@ contract ERC1155Test is Test {
     testERC1155.mint(address(erc1155Receiver), 1, 100, "");
     uint256 balance = testERC1155.balanceOf(address(erc1155Receiver), 1);
     require(balance == 100, "fail mint");
+  }
+
+  function testMintEmitTransferSingle() public {
+    vm.stopPrank();
+    vm.startPrank(user1);
+    vm.expectEmit(true, true, true, true);
+    emit TransferSingle(user1, address(0), user1, 1, 100);
+    testERC1155.mint(user1, 1, 100, "");
   }
 
   function testMintFailToAddressZero() public {
