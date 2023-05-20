@@ -144,7 +144,7 @@ contract ERC1155Test is Test {
     require(balance == 10, "fail transfer single");
   }
 
-  function g() public {
+  function testERC1155SafeTransferFromAnotherUserFailNotApproved() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
     vm.startPrank(user2);
