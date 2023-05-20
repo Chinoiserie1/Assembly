@@ -113,6 +113,14 @@ contract ERC1155Test is Test {
     testERC1155.mint(address(0), 1, 100, "");
   }
 
+  function testBalanceOf() public {
+    uint256 balance = testERC1155.balanceOf(user1, 1);
+    require(balance == 0);
+    testERC1155.mint(user1, 1, 100, "");
+    balance = testERC1155.balanceOf(user1, 1);
+    require(balance == 100, "fail to get balance");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
