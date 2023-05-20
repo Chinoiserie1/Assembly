@@ -86,11 +86,28 @@ contract ERC1155Test is Test {
   //   console.logBytes32(keccak256("TransferBatch(address,address,address,uint256[],uint256[])"));
   // }
 
+  function testApprovalForAll() public {
+    erc1155.setApprovalForAll(user1, true);
+    bool approved = erc1155.isApprovedForAll(owner, user1);
+    require(approved == true, "fail set approval for all");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
     vm.startPrank(user1);
+    testERC1155.safeTransferFrom(user1, user2, 1, 10, "");
+    uint256 balance = testERC1155.balanceOf(user2, 1);
+    require(balance == 10, "fail transfer single");
+  }
+
+  function testERC1155SafeTransferFromToERC1155ReceiverContract() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
     testERC1155.safeTransferFrom(user1, address(erc1155Receiver), 1, 10, "");
+    uint256 balance = testERC1155.balanceOf(address(erc1155Receiver), 1);
+    require(balance == 10, "fail transfer single to erc1155 receiver contract");
   }
 
   function testERC1155SafeBatchTransferFrom() public {
@@ -127,11 +144,5 @@ contract ERC1155Test is Test {
     uint256 balanceId2 = testERC1155.balanceOf(address(erc1155Receiver), 2);
     require(balanceId1 == 20, "fail batch transfer");
     require(balanceId2 == 50, "fail batch transfer");
-  }
-
-  function testApprovalForAll() public {
-    erc1155.setApprovalForAll(user1, true);
-    bool approved = erc1155.isApprovedForAll(owner, user1);
-    require(approved == true, "fail set approval for all");
   }
 }
