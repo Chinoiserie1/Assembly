@@ -101,6 +101,18 @@ contract ERC1155Test is Test {
     require(balance == 10, "fail transfer single");
   }
 
+  function testERC1155SafeTransferFromMultipleTransfer() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
+    testERC1155.safeTransferFrom(user1, user2, 1, 10, "");
+    uint256 balance = testERC1155.balanceOf(user2, 1);
+    require(balance == 10, "fail transfer single");
+    testERC1155.safeTransferFrom(user1, user2, 1, 10, "");
+    balance = testERC1155.balanceOf(user2, 1);
+    require(balance == 20, "fail transfer single multiple time");
+  }
+
   function testERC1155SafeTransferFromToERC1155ReceiverContract() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
