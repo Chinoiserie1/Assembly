@@ -130,6 +130,16 @@ contract ERC1155Test is Test {
     require(balance == 20, "fail transfer single multiple time");
   }
 
+  function testERC1155SafeTransferFromFailToAddressZero() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
+    vm.expectRevert(transferToZeroAddress.selector);
+    vm.stopPrank();
+    vm.startPrank(user1);
+    testERC1155.safeTransferFrom(user1, address(0), 1, 10, "");
+  }
+
   function testERC1155SafeTransferFromToERC1155ReceiverContract() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
