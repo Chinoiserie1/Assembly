@@ -121,6 +121,20 @@ contract ERC1155Test is Test {
     require(balance == 100, "fail to get balance");
   }
 
+  function testBalanceOfBatch() public {
+    address[] memory accounts = new address[](2);
+    accounts[0] = user1;
+    accounts[1] = user2;
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 1;
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user2, 1, 25, "");
+    uint256[] memory balances = testERC1155.balanceOfBatch(accounts, ids);
+    require(balances[0] == 100, "fail get balance batch 1");
+    require(balances[1] == 25, "fail get balance batch 2");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
