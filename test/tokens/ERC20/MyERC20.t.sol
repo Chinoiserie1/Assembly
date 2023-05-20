@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../../src/tokens/MyERC20.sol";
+import "../../../src/tokens/ERC20/MyERC20.sol";
 
 contract MyERC20Test is Test {
   MyERC20 public myERC20;
