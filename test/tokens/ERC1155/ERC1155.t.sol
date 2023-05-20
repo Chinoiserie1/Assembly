@@ -16,6 +16,16 @@ contract ERC1155Receiver {
   {
     return 0xf23a6e61;
   }
+
+  function onERC1155BatchReceived(
+    address operator,
+    address from,
+    uint256[] calldata ids,
+    uint256[] calldata values,
+    bytes calldata data
+  ) external returns (bytes4) {
+    return 0xbc197c81;
+  }
 }
 
 contract MyERC1155 is ERC1155 {
@@ -67,6 +77,13 @@ contract ERC1155Test is Test {
     console.logBytes4(bytes4(keccak256("operatorNotApproved()")));
     console.logBytes32(keccak256("TransferBatch(address,address,address,uint256[],uint256[])"));
   }
+
+  // function testERC1155SafeTransferFrom() public {
+  //   testERC1155.mint(user1, 1, 100);
+  //   vm.stopPrank();
+  //   vm.startPrank(user1);
+  //   testERC1155.safeTransferFrom(user1, address(erc1155Receiver), 1, 10, "");
+  // }
 
   function testERC1155SafeBatchTransferFrom() public {
     testERC1155.mint(user1, 1, 100);

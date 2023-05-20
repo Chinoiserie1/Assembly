@@ -48,6 +48,10 @@ bytes32 constant TRANSFER_BATCH_HASH =
 bytes32 constant ON_ERC1155_RECEIVED =
   0xf23a6e6100000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
+bytes32 constant ON_ERC1155_BATCH_RECEIVED = 
+  0xbc197c8100000000000000000000000000000000000000000000000000000000;
+
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
   mapping(uint256 => mapping(address => uint256)) public _balances;
@@ -313,12 +317,12 @@ contract ERC1155 {
     uint256[] calldata ids,
     uint256[] calldata amounts,
     bytes calldata data
-  ) external
+  )
+    external
   {
     address operator = msg.sender;
     _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-    bytes32 log;
     assembly {
       let ptr := mload(0x40)
       // check size ids & amounts
@@ -387,9 +391,9 @@ contract ERC1155 {
       // store the new memory ptr
       mstore(0x40, add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)))
     }
-    console.logBytes32(log);
 
     _afterTokenTransfer(operator, from, to, ids, amounts, data);
+    _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
   }
 
   // for test purpose
@@ -415,6 +419,7 @@ contract ERC1155 {
     bytes memory data
   ) internal virtual {}
 
+  // a refaire
   function _doSafeTransferAcceptanceCheck(
     address operator,
     address from,
@@ -422,7 +427,9 @@ contract ERC1155 {
     uint256 id,
     uint256 amount,
     bytes memory data
-  ) private {
+  ) 
+    private
+  {
     assembly {
       // check if address to is a contract
       if gt(extcodesize(to), 0) {
@@ -457,6 +464,38 @@ contract ERC1155 {
         mstore(0x40, add(ptr, totalSize))
       }
     }
+  }
+
+  function _doSafeBatchTransferAcceptanceCheck(
+    address operator,
+    address from,
+    address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+  )
+    private
+  {
+    bytes32 log;
+    assembly {
+      let ptr := mload(0x40)
+      log := ptr
+      // check if address to is a contract
+      if gt(extcodesize(to), 0) {
+        // get start pointer of ids & amounts
+        let startIdsPtr := add(ptr, 0xa4)
+        let startAmountsPtr := add(add(startIdsPtr, 0x20), mul(ids.length, 0x20))
+        let startDataPtr := add(add(startAmountsPtr, 0x20), mul(amounts.length, 0x20))
+        // store call info
+        mstore(ptr, ON_ERC1155_BATCH_RECEIVED)
+        mstore(add(ptr, 0x04), operator)
+        mstore(add(ptr, 0x24), from)
+        mstore(add(ptr, 0x44), startIdsPtr)
+        mstore(add(ptr, 0x64), startAmountsPtr)
+        mstore(add(ptr, 0x64), startDataPtr)
+      }
+    }
+    console.logBytes32(log);
   }
 
   // need to convert to assembly
