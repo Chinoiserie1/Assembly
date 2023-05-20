@@ -329,6 +329,11 @@ contract ERC1155 {
 
     assembly {
       let ptr := mload(0x40)
+      // revert if to == address(0)
+      if iszero(to) {
+        mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
       // check size ids & amounts
       if iszero(eq(ids.length, amounts.length)) {
         mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
@@ -408,6 +413,10 @@ contract ERC1155 {
     _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
 
     assembly {
+      if iszero(to) {
+        mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
       mstore(0x00, id)
       mstore(0x20, 0x00) // store _balances.slot
       mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
