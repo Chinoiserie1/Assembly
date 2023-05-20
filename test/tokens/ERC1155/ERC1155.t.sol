@@ -98,6 +98,12 @@ contract ERC1155Test is Test {
     require(balance == 100, "fail mint");
   }
 
+  function testMintToERC1155ReceiverContract() public {
+    testERC1155.mint(address(erc1155Receiver), 1, 100, "");
+    uint256 balance = testERC1155.balanceOf(address(erc1155Receiver), 1);
+    require(balance == 100, "fail mint");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
