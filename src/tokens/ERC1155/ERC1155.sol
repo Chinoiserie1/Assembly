@@ -419,14 +419,13 @@ contract ERC1155 {
     bytes memory data
   ) internal virtual {}
 
-  // a refaire
   function _doSafeTransferAcceptanceCheck(
     address operator,
     address from,
     address to,
     uint256 id,
     uint256 amount,
-    bytes memory data
+    bytes calldata data
   ) 
     private
   {
@@ -440,16 +439,16 @@ contract ERC1155 {
         mstore(add(ptr, 0x24), from)
         mstore(add(ptr, 0x44), id)
         mstore(add(ptr, 0x64), amount)
+        mstore(add(ptr, 0x84), 0xa0)
         // store the size of data
-        let size := mload(data)
-        mstore(add(ptr, 0x84), size)
-        let startSlot := add(ptr, 0xa4)
-        let totalSlot := shr(5, add(size, 0x1F))
+        mstore(add(ptr, 0xa4), data.length)
+        let startSlot := add(ptr, 0xc4)
+        let totalSlot := shr(5, add(data.length, 0x1F))
         // store all the data
         for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
-          mstore(add(startSlot, mul(i, 0x20)), mload(add(add(data, 0x20), mul(i, 0x20))))
+          mstore(add(startSlot, mul(i, 0x20)), calldataload(add(data.offset, mul(i, 0x20))))
         }
-        let totalSize := add(0xa4, mul(totalSlot, 0x20))
+        let totalSize := add(0xe4, mul(totalSlot, 0x20))
         // perform call
         let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
         if iszero(callstatus) {
@@ -476,10 +475,8 @@ contract ERC1155 {
   )
     private
   {
-    bytes32 log;
     assembly {
       let ptr := mload(0x40)
-      // log := ptr
       // check if address to is a contract
       if gt(extcodesize(to), 0) {
         // get start pointer of ids & amounts
@@ -511,8 +508,6 @@ contract ERC1155 {
         // [0xa4 + 0x60 = call info + size * (ids, amounts, data)] + length ids, amounts, data
         let totalSize := add(0x104, add(mul(2, mul(ids.length, 0x20)), mul(totalSlotData, 0x20)))
 
-        log := mload(add(ptr, 0x44))
-
         // perform call
         let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
         if iszero(callstatus) {
@@ -527,7 +522,6 @@ contract ERC1155 {
         mstore(0x40, add(ptr, totalSize))
       }
     }
-    console.logBytes32(log);
   }
 
   // need to convert to assembly
