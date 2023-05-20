@@ -92,6 +92,12 @@ contract ERC1155Test is Test {
     require(approved == true, "fail set approval for all");
   }
 
+  function testMint() public {
+    testERC1155.mint(user1, 1, 100, "");
+    uint256 balance = testERC1155.balanceOf(user1, 1);
+    require(balance == 100, "fail mint");
+  }
+
   function testERC1155SafeTransferFrom() public {
     testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
