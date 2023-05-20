@@ -59,6 +59,8 @@ contract ERC1155Test is Test {
   address internal user1;
   uint256 internal user2PrivateKey;
   address internal user2;
+  int256 internal user3PrivateKey;
+  address internal user3;
 
   function setUp() public {
     ownerPrivateKey = 0xA11CE;
@@ -67,6 +69,8 @@ contract ERC1155Test is Test {
     user1 = vm.addr(user1PrivateKey);
     user2PrivateKey = 0xFE55E;
     user2 = vm.addr(user2PrivateKey);
+    user3PrivateKey = 0xD1C;
+    user3 = vm.addr(user2PrivateKey);
     vm.startPrank(owner);
     erc1155 = new ERC1155(name, symbol);
     erc1155Receiver = new ERC1155Receiver();
@@ -128,6 +132,16 @@ contract ERC1155Test is Test {
     testERC1155.safeTransferFrom(user1, user2, 1, 10, "");
     balance = testERC1155.balanceOf(user2, 1);
     require(balance == 20, "fail transfer single multiple time");
+  }
+
+  function testERC1155SafeTransferFromAnotherUserWithApprovalSet() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
+    testERC1155.setApprovalForAll(user2, true);
+    testERC1155.safeTransferFrom(user1, user3, 1, 10, "");
+    uint256 balance = testERC1155.balanceOf(user3, 1);
+    require(balance == 10, "fail transfer single");
   }
 
   function testERC1155SafeTransferFromFailToAddressZero() public {
