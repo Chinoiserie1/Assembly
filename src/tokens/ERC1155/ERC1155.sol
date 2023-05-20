@@ -52,6 +52,10 @@ bytes32 constant ON_ERC1155_RECEIVED =
 bytes32 constant ON_ERC1155_BATCH_RECEIVED = 
   0xbc197c8100000000000000000000000000000000000000000000000000000000;
 
+/**
+ * @title ERC1155 in YUL inline-assembly
+ * @author chixx.eth
+ */
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
   mapping(uint256 => mapping(address => uint256)) public _balances;
@@ -396,9 +400,33 @@ contract ERC1155 {
     _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
   }
 
-  // for test purpose
-  function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal {
-    _balances[id][to] += amount;
+  function _mint(address to, uint256 id, uint256 amount, bytes calldata data) internal {
+    address operator = msg.sender;
+    uint256[] memory ids = _asSingletonArray(id);
+    uint256[] memory amounts = _asSingletonArray(amount);
+
+    _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+
+    assembly {
+      mstore(0x00, id)
+      mstore(0x20, 0x00) // store _balances.slot
+      mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
+      mstore(0x00, to)
+      let ptr := keccak256(0x00, 0x40)
+      let balanceToBefore := sload(ptr)
+      let balanceToAfter := add(balanceToBefore, amount)
+      if lt(balanceToAfter, balanceToBefore) {
+        mstore(0x00, OVERFLOW)
+        revert(0x00, 0x04)
+      }
+      sstore(ptr, balanceToAfter)
+      mstore(0x00, id)
+      mstore(0x20, amount)
+      log4(0x00, 0x40, TRANSFER_SINGLE_HASH, operator, 0, to)
+    }
+
+    _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+    _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
   }
 
   function _beforeTokenTransfer(
@@ -510,10 +538,12 @@ contract ERC1155 {
 
         // perform call
         let callstatus := call(gas(), to, 0, ptr, totalSize, 0x00, 0x20)
+        // check if call fail
         if iszero(callstatus) {
           mstore(0x00, CALL_FAIL)
           revert(0x00, 0x04)
         }
+        // check return value
         if iszero(and(mload(0x00),  ON_ERC1155_BATCH_RECEIVED)) {
           mstore(0x00, TRANSFER_TO_NON_ERC1155_RECEIVER)
           revert(0x00, 0x04)

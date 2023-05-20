@@ -5,6 +5,14 @@ import "forge-std/Test.sol";
 
 import "../../../src/tokens/ERC1155/ERC1155.sol";
 
+error accountsAndIdsLengthMissmatch();
+error callFail();
+error transferToNonERC1155Receiver();
+error transferToZeroAddress();
+error insufficientBalance();
+error overflow();
+error operatorNotApproved();
+
 contract ERC1155Receiver {
    function onERC1155Received(
     address _operator,
@@ -31,8 +39,8 @@ contract ERC1155Receiver {
 contract MyERC1155 is ERC1155 {
   constructor() ERC1155("testERC1155", "TST") {}
 
-  function mint(address to, uint256 id, uint256 amount) external {
-    _mint(to, id, amount, "");
+  function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
+    _mint(to, id, amount, data);
   }
 }
 
@@ -79,15 +87,15 @@ contract ERC1155Test is Test {
   }
 
   function testERC1155SafeTransferFrom() public {
-    testERC1155.mint(user1, 1, 100);
+    testERC1155.mint(user1, 1, 100, "");
     vm.stopPrank();
     vm.startPrank(user1);
     testERC1155.safeTransferFrom(user1, address(erc1155Receiver), 1, 10, "");
   }
 
-  function testERC1155SafeBatchTransferFrom() public {
-    testERC1155.mint(user1, 1, 100);
-    testERC1155.mint(user1, 2, 100);
+  function testERC1155SafeBatchTransferFromToERC1155ReceiverContract() public {
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user1, 2, 100, "");
     vm.stopPrank();
     vm.startPrank(user1);
     uint256[] memory ids = new uint256[](2);
@@ -100,6 +108,10 @@ contract ERC1155Test is Test {
     // testERC1155.balanceOf(user2, 1);
     // testERC1155.balanceOf(user2, 2);
     testERC1155.safeBatchTransferFrom(user1, address(erc1155Receiver), ids, amounts, "");
+    uint256 balanceId1 = testERC1155.balanceOf(address(erc1155Receiver), 1);
+    uint256 balanceId2 = testERC1155.balanceOf(address(erc1155Receiver), 2);
+    require(balanceId1 == 20, "fail batch transfer");
+    require(balanceId2 == 50, "fail batch transfer");
   }
 
   function testApprovalForAll() public {
