@@ -632,11 +632,12 @@ contract ERC1155 {
     }
   }
 
-  // need to convert to assembly
-  function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
-    uint256[] memory array = new uint256[](1);
-    array[0] = element;
-
-    return array;
+  function _asSingletonArray(uint256 element) private pure returns (uint256[] memory array) {
+    assembly {
+      array := mload(0x40)
+      mstore(array, 1)
+      mstore(add(array, 0x20), element)
+      mstore(0x40, add(array, 0x40))
+    }
   }
 }
