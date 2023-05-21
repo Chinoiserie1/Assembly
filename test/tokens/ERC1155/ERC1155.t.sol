@@ -174,6 +174,17 @@ contract ERC1155Test is Test {
     require(balanceId2 == 200, "fail mint id 2");
   }
 
+  function testMintBatchFailToAddressZero() public {
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 100;
+    amounts[1] = 200;
+    vm.expectRevert(transferToZeroAddress.selector);
+    testERC1155.mintBatch(address(0), ids, amounts, "");
+  }
+
   function testBalanceOf() public {
     uint256 balance = testERC1155.balanceOf(user1, 1);
     require(balance == 0);
