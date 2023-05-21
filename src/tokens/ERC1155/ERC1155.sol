@@ -270,6 +270,7 @@ contract ERC1155 {
     _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
     assembly {
+      // check if transfer to address zero
       if iszero(to) {
         mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
         revert(0x00, 0x04)
