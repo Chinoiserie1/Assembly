@@ -263,6 +263,20 @@ contract ERC1155Test is Test {
     require(balanceAfterId2 == 0, "fail burn id 2");
   }
 
+  function testBurnBatchEmitTransferBatchEvent() public {
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user1, 2, 100, "");
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 50;
+    amounts[1] = 100;
+    vm.expectEmit(true, true, true, false);
+    emit TransferBatch(owner, user1, address(0), ids, amounts);
+    testERC1155.burnBatch(user1, ids, amounts);
+  }
+
   function testBalanceOf() public {
     uint256 balance = testERC1155.balanceOf(user1, 1);
     require(balance == 0);
