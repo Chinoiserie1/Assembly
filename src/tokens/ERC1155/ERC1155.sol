@@ -21,6 +21,10 @@ bytes32 constant CALL_FAIL = 0x076e644b00000000000000000000000000000000000000000
 bytes32 constant TRANSFER_TO_ZERO_ADDRESS = 
   0xec87facc00000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("transferFromZeroAddress()"))
+bytes32 constant TRANSFER_FROM_ZERO_ADDRESS =
+  0xf582a03700000000000000000000000000000000000000000000000000000000;
+
 // bytes4(keccak256("insufficientBalance()"))
 bytes32 constant INSUFFICIENT_BALANCE = 
   0x47108e3e00000000000000000000000000000000000000000000000000000000;
@@ -515,6 +519,10 @@ contract ERC1155 {
     _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
 
     assembly {
+      if iszero(from) {
+        mstore(0x00, TRANSFER_FROM_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
       mstore(0x00, id)
       mstore(0x20, 0x00)
       mstore(0x20, keccak256(0x00, 0x40))

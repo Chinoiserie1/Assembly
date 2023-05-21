@@ -115,6 +115,7 @@ contract ERC1155Test is Test {
     console.logBytes32(keccak256("TransferSingle(address,address,address,uint256,uint256)"));
     console.logBytes4(bytes4(keccak256("operatorNotApproved()")));
     console.logBytes32(keccak256("TransferBatch(address,address,address,uint256[],uint256[])"));
+    console.logBytes4(bytes4(keccak256("transferFromZeroAddress()")));
   }
 
   function testApprovalForAll() public {
