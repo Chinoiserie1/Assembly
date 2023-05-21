@@ -317,6 +317,22 @@ contract ERC1155Test is Test {
     require(balanceId2 == 50, "fail batch transfer");
   }
 
+  function testERC1155SafeBatchTransferFromEmitTransferBatchEvent() public {
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user1, 2, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 20;
+    amounts[1] = 50;
+    vm.expectEmit(true, true, true, false);
+    emit TransferBatch(user1, user1, user2, ids, amounts);
+    testERC1155.safeBatchTransferFrom(user1, user2, ids, amounts, "");
+  }
+
   function testERC1155SafeBatchTransferFromAnotherUserFailNotApprove() public {
     testERC1155.mint(user1, 1, 100, "");
     testERC1155.mint(user1, 2, 100, "");
