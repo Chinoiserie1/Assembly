@@ -339,4 +339,15 @@ contract ERC1155Test is Test {
     vm.expectRevert(transferToZeroAddress.selector);
     testERC1155.safeBatchTransferFrom(user1, address(0), ids, amounts, "");
   }
+
+  function testERC1155SafeBatchTransferFromFailIdsAndAmountsLengthMissmatch() public {
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user1, 2, 100, "");
+    vm.stopPrank();
+    vm.startPrank(user1);
+    uint256[] memory ids = new uint256[](2);
+    uint256[] memory amounts = new uint256[](3);
+    vm.expectRevert(accountsAndIdsLengthMissmatch.selector);
+    testERC1155.safeBatchTransferFrom(user1, user2, ids, amounts, "");
+  }
 }
