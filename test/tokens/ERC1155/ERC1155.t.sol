@@ -216,7 +216,7 @@ contract ERC1155Test is Test {
     require(balances[1] == 25, "fail get balance batch 2");
   }
 
-  function testBalanceOfBatchFailIdsAndAmountsLengthMissmatch() public {
+  function testBalanceOfBatchFailIdsAndAccountsLengthMissmatch() public {
     address[] memory accounts = new address[](2);
     uint256[] memory ids = new uint256[](3);
     vm.expectRevert(accountsAndIdsLengthMissmatch.selector);
