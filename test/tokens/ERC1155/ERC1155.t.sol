@@ -42,6 +42,16 @@ contract MyERC1155 is ERC1155 {
   function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
     _mint(to, id, amount, data);
   }
+
+  function mintBatch(address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+  )
+    external
+  {
+    _mintBatch(to, ids, amounts, data);
+  }
 }
 
 contract ERC1155Test is Test {
@@ -134,6 +144,16 @@ contract ERC1155Test is Test {
   function testMintFailToAddressZero() public {
     vm.expectRevert(transferToZeroAddress.selector);
     testERC1155.mint(address(0), 1, 100, "");
+  }
+
+  function testMintBatch() public {
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 100;
+    amounts[1] = 200;
+    testERC1155.mintBatch(user1, ids, amounts, "");
   }
 
   function testBalanceOf() public {
