@@ -507,6 +507,33 @@ contract ERC1155 {
     _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
   }
 
+  function _burn(address from, uint256 id, uint256 amount) internal {
+    address operator = msg.sender;
+    uint256[] memory ids = _asSingletonArray(id);
+    uint256[] memory amounts = _asSingletonArray(amount);
+
+    _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
+
+    assembly {
+      mstore(0x00, id)
+      mstore(0x20, 0x00)
+      mstore(0x20, keccak256(0x00, 0x40))
+      mstore(0x00, from)
+      let balanceFromPtr := keccak256(0x00, 0x40)
+      let balanceFrom := sload(balanceFromPtr)
+      if lt(balanceFrom, amount) {
+        mstore(0x00, INSUFFICIENT_BALANCE)
+        revert(0x00, 0x04)
+      }
+      sstore(balanceFromPtr, sub(balanceFrom, amount))
+      mstore(0x00, id)
+      mstore(0x20, amount)
+      log4(0x00, 0x40, TRANSFER_SINGLE_HASH, operator, from, 0)
+    }
+
+    _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+  }
+
   function _beforeTokenTransfer(
     address operator,
     address from,
