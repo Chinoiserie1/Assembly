@@ -226,6 +226,12 @@ contract ERC1155Test is Test {
     testERC1155.burn(address(0), 1, 50);
   }
 
+  function testBurnFailInsufficientBalance() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.expectRevert(insufficientBalance.selector);
+    testERC1155.burn(user1, 1, 101);
+  }
+
   function testBalanceOf() public {
     uint256 balance = testERC1155.balanceOf(user1, 1);
     require(balance == 0);
