@@ -439,6 +439,70 @@ contract ERC1155 {
     _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
   }
 
+  function _mintBatch(
+    address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+  )
+    internal
+  {
+    address operator = msg.sender;
+    _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
+
+    assembly {
+      let ptrEvent := mload(0x40)
+      if iszero(to) {
+        mstore(0x00, TRANSFER_TO_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
+      // check size ids & amounts
+      if iszero(eq(ids.length, amounts.length)) {
+        mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        revert(0x00,0x04)
+      }
+      // store ids and amounts length for emit event
+      mstore(ptrEvent, ids.length)
+      let ptrStartAmountEvent := add(add(ptrEvent, 0x20), mul(ids.length, 0x20))
+      mstore(ptrStartAmountEvent, amounts.length)
+      for { let i := 0 } lt(i, ids.length) { i := add(i, 1) } {
+        let id := calldataload(add(ids.offset, mul(i, 0x20)))
+        mstore(0x00, id)
+        mstore(0x20, 0x00) // store _balances.slot
+        mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
+        mstore(0x00, to)
+        let ptr := keccak256(0x00, 0x40)
+        let balanceToBefore := sload(ptr)
+        let amount := calldataload(add(amounts.offset, mul(i, 0x20)))
+        let balanceToAfter := add(balanceToBefore, amount)
+        if lt(balanceToAfter, balanceToBefore) {
+          mstore(0x00, OVERFLOW)
+          revert(0x00, 0x04)
+        }
+        sstore(ptr, balanceToAfter)
+        // store id for emit event
+        mstore(add(add(ptrEvent, 0x20), mul(i, 0x20)), id)
+        // store amount for emit event
+        mstore(add(add(ptrStartAmountEvent, 0x20), mul(i, 0x20)), amount)
+      }
+      mstore(0x00, ptrEvent)
+      mstore(0x20, ptrStartAmountEvent)
+      log4(
+        0x00,
+        add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)),
+        TRANSFER_BATCH_HASH,
+        operator,
+        0,
+        to
+      )
+      // store the new memory ptr
+      mstore(0x40, add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)))
+    }
+
+    _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
+    _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+  }
+
   function _beforeTokenTransfer(
     address operator,
     address from,
