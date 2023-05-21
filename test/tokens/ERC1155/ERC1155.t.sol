@@ -10,6 +10,7 @@ error amountsAndIdsLengthMissmatch();
 error callFail();
 error transferToNonERC1155Receiver();
 error transferToZeroAddress();
+error transferFromZeroAddress();
 error insufficientBalance();
 error overflow();
 error operatorNotApproved();
@@ -218,6 +219,11 @@ contract ERC1155Test is Test {
     testERC1155.burn(user1, 1, 50);
     uint256 balanceAfter = testERC1155.balanceOf(user1, 1);
     require(balanceAfter == 50, "fail burn");
+  }
+
+  function testBurnFailFromAddressZero() public {
+    vm.expectRevert(transferFromZeroAddress.selector);
+    testERC1155.burn(address(0), 1, 50);
   }
 
   function testBalanceOf() public {
