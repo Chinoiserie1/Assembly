@@ -154,6 +154,24 @@ contract ERC1155Test is Test {
     amounts[0] = 100;
     amounts[1] = 200;
     testERC1155.mintBatch(user1, ids, amounts, "");
+    uint256 balanceId1 = testERC1155.balanceOf(user1, 1);
+    uint256 balanceId2 = testERC1155.balanceOf(user1, 2);
+    require(balanceId1 == 100, "fail mint id 1");
+    require(balanceId2 == 200, "fail mint id 2");
+  }
+
+  function testMintBatchToERC1155ReceiverContract() public {
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 100;
+    amounts[1] = 200;
+    testERC1155.mintBatch(address(erc1155Receiver), ids, amounts, "");
+    uint256 balanceId1 = testERC1155.balanceOf(address(erc1155Receiver), 1);
+    uint256 balanceId2 = testERC1155.balanceOf(address(erc1155Receiver), 2);
+    require(balanceId1 == 100, "fail mint id 1");
+    require(balanceId2 == 200, "fail mint id 2");
   }
 
   function testBalanceOf() public {
