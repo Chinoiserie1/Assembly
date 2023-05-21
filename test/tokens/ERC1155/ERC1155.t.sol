@@ -225,6 +225,13 @@ contract ERC1155Test is Test {
     require(balanceAfter == 50, "fail burn");
   }
 
+  function testBurnEmitTransferSingleEvent() public {
+    testERC1155.mint(user1, 1, 100, "");
+    vm.expectEmit(true, true, true, true);
+    emit TransferSingle(owner, user1, address(0), 1, 50);
+    testERC1155.burn(user1, 1, 50);
+  }
+
   function testBurnFailFromAddressZero() public {
     vm.expectRevert(transferFromZeroAddress.selector);
     testERC1155.burn(address(0), 1, 50);
