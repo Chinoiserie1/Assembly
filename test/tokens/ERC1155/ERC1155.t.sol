@@ -69,6 +69,13 @@ contract ERC1155Test is Test {
     uint256 id,
     uint256 value
   );
+  event TransferBatch(
+    address indexed operator,
+    address indexed from,
+    address indexed to,
+    uint256[] ids,
+    uint256[] values
+  );
 
   function setUp() public {
     ownerPrivateKey = 0xA11CE;
@@ -315,7 +322,7 @@ contract ERC1155Test is Test {
     testERC1155.mint(user1, 2, 100, "");
     vm.stopPrank();
     vm.startPrank(user2);
-     uint256[] memory ids = new uint256[](2);
+    uint256[] memory ids = new uint256[](2);
     ids[0] = 1;
     ids[1] = 2;
     uint256[] memory amounts = new uint256[](2);
