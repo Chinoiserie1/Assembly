@@ -542,6 +542,61 @@ contract ERC1155 {
     _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
   }
 
+  function _burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) internal {
+    address operator = msg.sender;
+
+    _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
+
+    assembly {
+      let eventPtr := mload(0x40)
+      if iszero(from) {
+        mstore(0x00, TRANSFER_FROM_ZERO_ADDRESS)
+        revert(0x00, 0x04)
+      }
+      if iszero(eq(ids.length, amounts.length)) {
+        mstore(0x00, AMOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        revert(0x00,0x04)
+      }
+      // store ids and amounts length for emit event
+      mstore(eventPtr, ids.length)
+      let ptrStartAmountEvent := add(add(eventPtr, 0x20), mul(ids.length, 0x20))
+      mstore(ptrStartAmountEvent, amounts.length)
+      for { let i := 0 } lt(i, ids.length) { i := add(i, 1) } {
+        let id := calldataload(add(ids.offset, mul(i, 0x20)))
+        let amount := calldataload(add(amounts.offset, mul(i, 0x20)))
+        mstore(0x00, id)
+        mstore(0x20, 0x00) // store _balances.slot
+        mstore(0x20, keccak256(0x00, 0x40)) // hash id + slot
+        mstore(0x00, from)
+        let balancePtr := keccak256(0x00, 0x40)
+        let balanceFrom := sload(balancePtr)
+        if lt(balanceFrom, amount) {
+          mstore(0x00, INSUFFICIENT_BALANCE)
+          revert(0x00, 0x04)
+        }
+        sstore(balancePtr, sub(balanceFrom, amount))
+        // store id for emit event
+        mstore(add(add(eventPtr, 0x20), mul(i, 0x20)), id)
+        // store amount for emit event
+        mstore(add(add(ptrStartAmountEvent, 0x20), mul(i, 0x20)), amount)
+      }
+      mstore(0x00, eventPtr)
+      mstore(0x20, ptrStartAmountEvent)
+      log4(
+        0x00,
+        add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)),
+        TRANSFER_BATCH_HASH,
+        operator,
+        from,
+        0
+      )
+      // store the new memory ptr
+      mstore(0x40, add(add(ptrStartAmountEvent, 0x20), mul(amounts.length, 0x20)))
+    }
+
+    _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
+  }
+
   function _beforeTokenTransfer(
     address operator,
     address from,
