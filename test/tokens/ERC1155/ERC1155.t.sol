@@ -58,6 +58,10 @@ contract MyERC1155 is ERC1155 {
   function burn(address from, uint256 id, uint256 amount) external {
     _burn(from, id, amount);
   }
+
+  function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external {
+    _burnBatch(from, ids, amounts);
+  }
 }
 
 contract ERC1155Test is Test {
@@ -230,6 +234,26 @@ contract ERC1155Test is Test {
     testERC1155.mint(user1, 1, 100, "");
     vm.expectRevert(insufficientBalance.selector);
     testERC1155.burn(user1, 1, 101);
+  }
+
+  function testBurnBatch() public {
+    testERC1155.mint(user1, 1, 100, "");
+    testERC1155.mint(user1, 2, 100, "");
+    uint256 balanceBeforeId1 = testERC1155.balanceOf(user1, 1);
+    uint256 balanceBeforeId2 = testERC1155.balanceOf(user1, 2);
+    require(balanceBeforeId1 == 100, "fail mint id 1");
+    require(balanceBeforeId2 == 100, "fail mint id 2");
+    uint256[] memory ids = new uint256[](2);
+    ids[0] = 1;
+    ids[1] = 2;
+    uint256[] memory amounts = new uint256[](2);
+    amounts[0] = 50;
+    amounts[1] = 100;
+    testERC1155.burnBatch(user1, ids, amounts);
+    uint256 balanceAfterId1 = testERC1155.balanceOf(user1, 1);
+    uint256 balanceAfterId2 = testERC1155.balanceOf(user1, 2);
+    require(balanceAfterId1 == 50, "fail burn id 1");
+    require(balanceAfterId2 == 0, "fail burn id 2");
   }
 
   function testBalanceOf() public {
