@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import "../../../src/tokens/ERC1155/ERC1155.sol";
 
 error accountsAndIdsLengthMissmatch();
+error amountsAndIdsLengthMissmatch();
 error callFail();
 error transferToNonERC1155Receiver();
 error transferToZeroAddress();
@@ -102,18 +103,19 @@ contract ERC1155Test is Test {
     testERC1155 = new MyERC1155();
   }
 
-  // function testLog() public view {
-  //   console.logBytes4(bytes4(keccak256("accountsAndIdsLengthMissmatch()")));
-  //   console.logBytes32(keccak256("ApprovalForAll(address,address,bool)"));
-  //   console.logBytes4(bytes4(keccak256("callFail()")));
-  //   console.logBytes4(bytes4(keccak256("transferToNonERC1155Receiver()")));
-  //   console.logBytes4(bytes4(keccak256("transferToZeroAddress()")));
-  //   console.logBytes4(bytes4(keccak256("insufficientBalance()")));
-  //   console.logBytes4(bytes4(keccak256("overflow()")));
-  //   console.logBytes32(keccak256("TransferSingle(address,address,address,uint256,uint256)"));
-  //   console.logBytes4(bytes4(keccak256("operatorNotApproved()")));
-  //   console.logBytes32(keccak256("TransferBatch(address,address,address,uint256[],uint256[])"));
-  // }
+  function testLog() public view {
+    console.logBytes4(bytes4(keccak256("accountsAndIdsLengthMissmatch()")));
+    console.logBytes4(bytes4(keccak256("amountsAndIdsLengthMissmatch()")));
+    console.logBytes32(keccak256("ApprovalForAll(address,address,bool)"));
+    console.logBytes4(bytes4(keccak256("callFail()")));
+    console.logBytes4(bytes4(keccak256("transferToNonERC1155Receiver()")));
+    console.logBytes4(bytes4(keccak256("transferToZeroAddress()")));
+    console.logBytes4(bytes4(keccak256("insufficientBalance()")));
+    console.logBytes4(bytes4(keccak256("overflow()")));
+    console.logBytes32(keccak256("TransferSingle(address,address,address,uint256,uint256)"));
+    console.logBytes4(bytes4(keccak256("operatorNotApproved()")));
+    console.logBytes32(keccak256("TransferBatch(address,address,address,uint256[],uint256[])"));
+  }
 
   function testApprovalForAll() public {
     erc1155.setApprovalForAll(user1, true);
@@ -183,6 +185,13 @@ contract ERC1155Test is Test {
     amounts[1] = 200;
     vm.expectRevert(transferToZeroAddress.selector);
     testERC1155.mintBatch(address(0), ids, amounts, "");
+  }
+
+  function testMintBatchFailIdsAndAmountsLengthMissmatch() public {
+    uint256[] memory ids = new uint256[](2);
+    uint256[] memory amounts = new uint256[](3);
+    vm.expectRevert(amountsAndIdsLengthMissmatch.selector);
+    testERC1155.mintBatch(user1, ids, amounts, "");
   }
 
   function testBalanceOf() public {
@@ -419,7 +428,7 @@ contract ERC1155Test is Test {
     vm.startPrank(user1);
     uint256[] memory ids = new uint256[](2);
     uint256[] memory amounts = new uint256[](3);
-    vm.expectRevert(accountsAndIdsLengthMissmatch.selector);
+    vm.expectRevert(amountsAndIdsLengthMissmatch.selector);
     testERC1155.safeBatchTransferFrom(user1, user2, ids, amounts, "");
   }
 

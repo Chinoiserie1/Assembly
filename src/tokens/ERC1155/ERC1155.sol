@@ -10,6 +10,10 @@ import "forge-std/Test.sol";
 bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH = 
   0x06894ca700000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("amountsAndIdsLengthMissmatch()"))
+bytes32 constant AMOUNTS_AND_IDS_LENGTH_MISSMATCH = 
+  0xca1ff2b000000000000000000000000000000000000000000000000000000000;
+
 // bytes4(keccak256("callFail()"))
 bytes32 constant CALL_FAIL = 0x076e644b00000000000000000000000000000000000000000000000000000000;
 
@@ -337,7 +341,7 @@ contract ERC1155 {
       }
       // check size ids & amounts
       if iszero(eq(ids.length, amounts.length)) {
-        mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        mstore(0x00, AMOUNTS_AND_IDS_LENGTH_MISSMATCH)
         revert(0x00,0x04)
       }
       // check if approved
@@ -458,7 +462,7 @@ contract ERC1155 {
       }
       // check size ids & amounts
       if iszero(eq(ids.length, amounts.length)) {
-        mstore(0x00, ACCOUNTS_AND_IDS_LENGTH_MISSMATCH)
+        mstore(0x00, AMOUNTS_AND_IDS_LENGTH_MISSMATCH)
         revert(0x00,0x04)
       }
       // store ids and amounts length for emit event
