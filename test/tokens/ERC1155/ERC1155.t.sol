@@ -53,6 +53,10 @@ contract MyERC1155 is ERC1155 {
   {
     _mintBatch(to, ids, amounts, data);
   }
+
+  function burn(address from, uint256 id, uint256 amount) external {
+    _burn(from, id, amount);
+  }
 }
 
 contract ERC1155Test is Test {
@@ -205,6 +209,15 @@ contract ERC1155Test is Test {
     uint256[] memory amounts = new uint256[](3);
     vm.expectRevert(amountsAndIdsLengthMissmatch.selector);
     testERC1155.mintBatch(user1, ids, amounts, "");
+  }
+
+  function testBurn() public {
+    testERC1155.mint(user1, 1, 100, "");
+    uint256 balanceBefore = testERC1155.balanceOf(user1, 1);
+    require(balanceBefore == 100, "fail mint");
+    testERC1155.burn(user1, 1, 50);
+    uint256 balanceAfter = testERC1155.balanceOf(user1, 1);
+    require(balanceAfter == 50, "fail burn");
   }
 
   function testBalanceOf() public {
