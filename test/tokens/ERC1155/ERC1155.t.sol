@@ -62,6 +62,10 @@ contract MyERC1155 is ERC1155 {
   function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external {
     _burnBatch(from, ids, amounts);
   }
+
+  function setURI(string calldata newuri) external {
+    _setURI(newuri);
+  }
 }
 
 contract ERC1155Test is Test {
@@ -128,9 +132,16 @@ contract ERC1155Test is Test {
     console.logBytes4(bytes4(keccak256("transferFromZeroAddress()")));
   }
 
-  function testUri() public {
+  function testUri() public view {
     string memory uri_ = testERC1155.uri(1);
     require(keccak256(abi.encode(uri)) == keccak256(abi.encode(uri_)), "Uri missmatch");
+  }
+
+  function testSetUri() public {
+    string memory newUri = "baseUriABCDEFGHIJKLMNOPKRSTUVWXY";
+    testERC1155.setURI(newUri);
+    string memory uri_ = testERC1155.uri(1);
+    require(keccak256(abi.encode(newUri)) == keccak256(abi.encode(uri_)), "fail set new uri");
   }
 
   function testApprovalForAll() public {
