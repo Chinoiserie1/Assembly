@@ -63,6 +63,8 @@ bytes32 constant ON_ERC1155_BATCH_RECEIVED =
 /**
  * @title ERC1155 in YUL inline-assembly
  * @author chixx.eth
+ * @dev this contract have reference the openzepplin-contract
+ * see https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC1155/ERC1155.sol
  */
 contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
@@ -200,6 +202,16 @@ contract ERC1155 {
     return ptr;
   }
 
+  /**
+   * @dev See {IERC1155MetadataURI-uri}.
+   *
+   * This implementation returns the same URI for *all* token types. It relies
+   * on the token type ID substitution mechanism
+   * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
+   *
+   * Clients calling this function must replace the `\{id\}` substring with the
+   * actual token type ID.
+   */
   function uri(uint256) public view returns (string memory) {
     string memory ptr;
     assembly {
@@ -442,6 +454,25 @@ contract ERC1155 {
     _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
   }
 
+  /**
+   * @dev Sets a new URI for all token types, by relying on the token type ID
+   * substitution mechanism
+   * https://eips.ethereum.org/EIPS/eip-1155#metadata[defined in the EIP].
+   *
+   * By this mechanism, any occurrence of the `\{id\}` substring in either the
+   * URI or any of the amounts in the JSON file at said URI will be replaced by
+   * clients with the token type ID.
+   *
+   * For example, the `https://token-cdn-domain/\{id\}.json` URI would be
+   * interpreted by clients as
+   * `https://token-cdn-domain/000000000000000000000000000000000000000000000000000000000004cce0.json`
+   * for token type ID 0x4cce0.
+   *
+   * See {uri}.
+   *
+   * Because these URIs cannot be meaningfully represented by the {URI} event,
+   * this function emits no events.
+   */
   function _setURI(string calldata newuri) internal {
     assembly {
       switch lt(newuri.length, 32)
@@ -457,7 +488,7 @@ contract ERC1155 {
         let startSlot := keccak256(0x00, 0x20)
         let totalSlot := shr(5, newuri.length)
         sstore(0x04, add(shl(1, newuri.length), 1))
-        for {let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+        for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
           sstore(add(startSlot, mul(i, 0x20)), calldataload(add(newuri.offset, mul(i, 0x20))))
         }
       }
