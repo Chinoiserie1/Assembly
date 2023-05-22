@@ -128,6 +128,11 @@ contract ERC1155Test is Test {
     console.logBytes4(bytes4(keccak256("transferFromZeroAddress()")));
   }
 
+  function testUri() public {
+    string memory uri_ = testERC1155.uri(1);
+    require(keccak256(abi.encode(uri)) == keccak256(abi.encode(uri_)), "Uri missmatch");
+  }
+
   function testApprovalForAll() public {
     erc1155.setApprovalForAll(user1, true);
     bool approved = erc1155.isApprovedForAll(owner, user1);
