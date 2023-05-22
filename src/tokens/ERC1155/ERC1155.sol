@@ -199,6 +199,33 @@ contract ERC1155 {
     return ptr;
   }
 
+  function uri(uint256) public view returns (string memory) {
+    string memory ptr;
+    assembly {
+      ptr := mload(0x40)
+      let slot := sload(0x04)
+      switch and(slot, 1)
+      case 0 {
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        mstore(add(ptr, 0x20), and(slot, not(255)))
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+      case 1 {
+        mstore(0x00, 0x04)
+        let startSlot := keccak256(0x00, 0x20)
+        let size := shr(1, and(slot, 255))
+        mstore(ptr, size)
+        let totalSlot := shr(5, add(size, 0x1F))
+        for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+          mstore(add(add(ptr, 0x20), mul(0x20, i)), sload(add(startSlot, i)))
+        }
+        mstore(0x40, add(add(ptr, 0x20), size))
+      }
+    }
+    return ptr;
+  }
+
   function balanceOf(address account, uint256 id) external view returns (uint256) {
     assembly {
       mstore(0x00, id)
