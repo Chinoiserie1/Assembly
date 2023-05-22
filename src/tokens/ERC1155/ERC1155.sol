@@ -442,6 +442,28 @@ contract ERC1155 {
     _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
   }
 
+  function _setURI(string calldata newuri) internal {
+    assembly {
+      switch lt(newuri.length, 32)
+      case 1 {
+        // string store in the same slot
+        mstore(0x00, calldataload(newuri.offset))
+        mstore(0x1f, shl(248, mul(newuri.length, 2)))
+        sstore(0x04, mload(0x00))
+      }
+      case 0 {
+        // string store in multiple slot
+        mstore(0x00, 0x04)
+        let startSlot := keccak256(0x00, 0x20)
+        let totalSlot := shr(5, newuri.length)
+        sstore(0x04, add(shl(1, newuri.length), 1))
+        for {let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
+          sstore(add(startSlot, mul(i, 0x20)), calldataload(add(newuri.offset, mul(i, 0x20))))
+        }
+      }
+    }
+  }
+
   function _mint(address to, uint256 id, uint256 amount, bytes calldata data) internal {
     address operator = msg.sender;
     uint256[] memory ids = _asSingletonArray(id);
