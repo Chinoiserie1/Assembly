@@ -116,9 +116,10 @@ contract ERC1155 {
    */
   event URI(string value, uint256 indexed id);
 
-  constructor(string memory name_, string memory symbol_) {
+  constructor(string memory name_, string memory symbol_, string memory uri_) {
     _name = name_;
     _symbol = symbol_;
+    _uri = uri_;
   }
 
   function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {

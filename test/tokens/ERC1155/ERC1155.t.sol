@@ -39,7 +39,7 @@ contract ERC1155Receiver {
 }
 
 contract MyERC1155 is ERC1155 {
-  constructor() ERC1155("testERC1155", "TST") {}
+  constructor() ERC1155("testERC1155", "TST", "baseUri") {}
 
   function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
     _mint(to, id, amount, data);
@@ -71,6 +71,7 @@ contract ERC1155Test is Test {
 
   string name = "nameTestAAAAAAAAAAAAAAAAAAnameTestAAAAAAAAAAAAAAAAAA";
   string symbol = "NTST";
+  string uri = "baseUri";
   uint256 maxSupply = 1000000 ether;
 
   uint256 internal ownerPrivateKey;
@@ -107,7 +108,7 @@ contract ERC1155Test is Test {
     user3PrivateKey = 0xD1C;
     user3 = vm.addr(user2PrivateKey);
     vm.startPrank(owner);
-    erc1155 = new ERC1155(name, symbol);
+    erc1155 = new ERC1155(name, symbol, uri);
     erc1155Receiver = new ERC1155Receiver();
     testERC1155 = new MyERC1155();
   }
