@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import "../../utils/IERC165.sol";
 import "./IERC1155.sol";
 
-import "forge-std/Test.sol";
+// import "forge-std/Test.sol";
 
 // bytes4(keccak256("accountsAndIdsLengthMissmatch()"))
 bytes32 constant ACCOUNTS_AND_IDS_LENGTH_MISSMATCH = 
@@ -135,7 +135,7 @@ contract ERC1155 {
    * @dev string are not fixed to 32 bytes, if name > 32
    *      need to compute each slot and get the value
    */
-  function name() external view returns (string memory) {
+  function name() external view virtual returns (string memory) {
     string memory ptr;
     assembly {
       // load free memory ptr
@@ -175,7 +175,7 @@ contract ERC1155 {
    * @notice return the symbol of the contract
    * @dev see name() for more detail
    */
-  function symbol() external view returns (string memory) {
+  function symbol() external view virtual returns (string memory) {
     string memory ptr;
     assembly {
       ptr := mload(0x40)
@@ -212,7 +212,7 @@ contract ERC1155 {
    * Clients calling this function must replace the `\{id\}` substring with the
    * actual token type ID.
    */
-  function uri(uint256) public view returns (string memory) {
+  function uri(uint256) public view virtual returns (string memory) {
     string memory ptr;
     assembly {
       ptr := mload(0x40)
@@ -239,7 +239,7 @@ contract ERC1155 {
     return ptr;
   }
 
-  function balanceOf(address account, uint256 id) external view returns (uint256) {
+  function balanceOf(address account, uint256 id) external view virtual returns (uint256) {
     assembly {
       mstore(0x00, id)
       mstore(0x20, 0x00) // store _balances.slot
@@ -252,7 +252,7 @@ contract ERC1155 {
 
   // need to change with offset and length
   function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
-    external view returns (uint256[] memory balances)
+    external view virtual returns (uint256[] memory balances)
   {
     assembly {
       balances := mload(0x40)
@@ -280,7 +280,7 @@ contract ERC1155 {
     }
   }
 
-  function setApprovalForAll(address operator, bool approved) external {
+  function setApprovalForAll(address operator, bool approved) external virtual {
     assembly {
       mstore(0x00, caller())
       mstore(0x20, 0x01)
@@ -292,7 +292,7 @@ contract ERC1155 {
     }
   }
 
-  function isApprovedForAll(address account, address operator) external view returns (bool) {
+  function isApprovedForAll(address account, address operator) external view virtual returns (bool) {
     assembly {
       mstore(0x00, account)
       mstore(0x20, 0x01)
@@ -309,8 +309,10 @@ contract ERC1155 {
     address to,
     uint256 id,
     uint256 amount,
-    bytes calldata data) 
+    bytes calldata data
+  )
     external
+    virtual
   {
     address operator = msg.sender;
     uint256[] memory ids = _asSingletonArray(id);
@@ -372,6 +374,7 @@ contract ERC1155 {
     bytes calldata data
   )
     external
+    virtual
   {
     address operator = msg.sender;
     _beforeTokenTransfer(operator, from, to, ids, amounts, data);
@@ -473,7 +476,7 @@ contract ERC1155 {
    * Because these URIs cannot be meaningfully represented by the {URI} event,
    * this function emits no events.
    */
-  function _setURI(string calldata newuri) internal {
+  function _setURI(string calldata newuri) internal virtual {
     assembly {
       switch lt(newuri.length, 32)
       case 1 {
@@ -495,7 +498,7 @@ contract ERC1155 {
     }
   }
 
-  function _mint(address to, uint256 id, uint256 amount, bytes calldata data) internal {
+  function _mint(address to, uint256 id, uint256 amount, bytes calldata data) internal virtual {
     address operator = msg.sender;
     uint256[] memory ids = _asSingletonArray(id);
     uint256[] memory amounts = _asSingletonArray(amount);
@@ -535,6 +538,7 @@ contract ERC1155 {
     bytes calldata data
   )
     internal
+    virtual
   {
     address operator = msg.sender;
     _beforeTokenTransfer(operator, address(0), to, ids, amounts, data);
@@ -592,7 +596,7 @@ contract ERC1155 {
     _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
   }
 
-  function _burn(address from, uint256 id, uint256 amount) internal {
+  function _burn(address from, uint256 id, uint256 amount) internal virtual {
     address operator = msg.sender;
     uint256[] memory ids = _asSingletonArray(id);
     uint256[] memory amounts = _asSingletonArray(amount);
@@ -623,7 +627,7 @@ contract ERC1155 {
     _afterTokenTransfer(operator, from, address(0), ids, amounts, "");
   }
 
-  function _burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) internal {
+  function _burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) internal virtual {
     address operator = msg.sender;
 
     _beforeTokenTransfer(operator, from, address(0), ids, amounts, "");
@@ -685,7 +689,7 @@ contract ERC1155 {
     uint256[] memory ids,
     uint256[] memory amounts,
     bytes memory data
-  ) internal {}
+  ) internal virtual {}
 
   function _afterTokenTransfer(
     address operator,
