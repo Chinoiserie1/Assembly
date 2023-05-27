@@ -492,7 +492,7 @@ contract ERC1155 {
         let totalSlot := shr(5, newuri.length)
         sstore(0x04, add(shl(1, newuri.length), 1))
         for { let i := 0 } lt(i, totalSlot) { i := add(i, 1) } {
-          sstore(add(startSlot, mul(i, 0x20)), calldataload(add(newuri.offset, mul(i, 0x20))))
+          sstore(add(startSlot, i), calldataload(add(newuri.offset, mul(i, 0x20))))
         }
       }
     }
