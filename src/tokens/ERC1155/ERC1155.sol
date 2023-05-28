@@ -66,7 +66,7 @@ bytes32 constant ON_ERC1155_BATCH_RECEIVED =
  * @dev this contract have reference the openzepplin-contract
  * see https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC1155/ERC1155.sol
  */
-contract ERC1155 {
+abstract contract ERC1155 {
   // Mapping from token ID to account balances slot 0x00
   mapping(uint256 => mapping(address => uint256)) public _balances;
 

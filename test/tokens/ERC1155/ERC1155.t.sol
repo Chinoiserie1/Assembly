@@ -112,7 +112,6 @@ contract ERC1155Test is Test {
     user3PrivateKey = 0xD1C;
     user3 = vm.addr(user2PrivateKey);
     vm.startPrank(owner);
-    erc1155 = new ERC1155(name, symbol, uri);
     erc1155Receiver = new ERC1155Receiver();
     testERC1155 = new MyERC1155();
   }
@@ -145,8 +144,8 @@ contract ERC1155Test is Test {
   }
 
   function testApprovalForAll() public {
-    erc1155.setApprovalForAll(user1, true);
-    bool approved = erc1155.isApprovedForAll(owner, user1);
+    testERC1155.setApprovalForAll(user1, true);
+    bool approved = testERC1155.isApprovedForAll(owner, user1);
     require(approved == true, "fail set approval for all");
   }
 
