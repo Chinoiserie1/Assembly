@@ -5,9 +5,6 @@ import "../ERC1155.sol";
 
 import "forge-std/Test.sol";
 
-// bytes4(keccak256("overflow()"))
-// bytes32 constant OVERFLOW = 0x004264c300000000000000000000000000000000000000000000000000000000;
-
 // bytes4(keccak256("burnAmountExceedsTotalSupply()"))
 bytes32 constant BURN_AMOUNT_EXCEEDS_TOTAL_SUPPLY = 
   0x9fe38c4f00000000000000000000000000000000000000000000000000000000;
@@ -111,17 +108,5 @@ abstract contract ERC1155Supply is ERC1155 {
     }
 
     console.logBytes32(log);
-
-    // if (to == address(0)) {
-    //   for (uint256 i = 0; i < ids.length; ++i) {
-    //     uint256 id = ids[i];
-    //     uint256 amount = amounts[i];
-    //     uint256 supply = _totalSupply[id];
-    //     require(supply >= amount, "ERC1155: burn amount exceeds totalSupply");
-    //     unchecked {
-    //       _totalSupply[id] = supply - amount;
-    //     }
-    //   }
-    // }
   }
 }
