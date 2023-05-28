@@ -3,8 +3,6 @@ pragma solidity ^0.8.19;
 
 import "../ERC1155.sol";
 
-import "forge-std/Test.sol";
-
 // bytes4(keccak256("burnAmountExceedsTotalSupply()"))
 bytes32 constant BURN_AMOUNT_EXCEEDS_TOTAL_SUPPLY = 
   0x9fe38c4f00000000000000000000000000000000000000000000000000000000;
@@ -65,8 +63,6 @@ abstract contract ERC1155Supply is ERC1155 {
   ) internal virtual override {
     super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
-    bytes32 log;
-
     assembly {
       if iszero(from) {
         let size := mload(ids)
@@ -106,7 +102,5 @@ abstract contract ERC1155Supply is ERC1155 {
         }
       }
     }
-
-    console.logBytes32(log);
   }
 }
