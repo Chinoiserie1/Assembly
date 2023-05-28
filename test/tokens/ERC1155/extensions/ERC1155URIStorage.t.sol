@@ -43,6 +43,18 @@ contract TestERC1155URIStorage is Test {
     testERC1155URIStorage = new MyERC1155URIStorage();
   }
 
+  function testURIWithBaseLessThan32BytesAndTokenURILesThan32BytesLength() public {
+    string memory base = "ThisIsBase1";
+    string memory tokenURI = "ThisIsBase2";
+    testERC1155URIStorage.setBaseURI(base);
+    testERC1155URIStorage.setURI(1, tokenURI);
+    string memory result = testERC1155URIStorage.uri(1);
+    require(
+      keccak256(bytes(result)) == keccak256(bytes(abi.encodePacked(base, tokenURI))),
+      "fail get tokenUri with base"
+    );
+  }
+
   function testURIWithBaseLengthLessThan32BytesAndTokenURIMoreThan32BytesLength() public {
     string memory base = "ThisIsBase1";
     string memory tokenURI = "ThisIsBase1ThisIsBase2ThisIsBase3ThisIsBase4567";
