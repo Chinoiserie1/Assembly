@@ -62,6 +62,21 @@ contract TestERC1155Supply is Test {
     require(totalSupply == 100, "fail update total supply");
   }
 
+  function testERC1155SupplyMintBatchTokenId1ShouldUpdateSupply() public {
+    uint256[] memory ids = new uint256[](3);
+    ids[0] = 1;
+    ids[1] = 1;
+    ids[2] = 1;
+    uint256[] memory amounts = new uint256[](3);
+    amounts[0] = 10;
+    amounts[1] = 20;
+    amounts[2] = 70;
+
+    testERC1155Supply.mintBatch(user1, ids, amounts, "");
+    uint256 totalSupply = testERC1155Supply.totalSupply(1);
+    require(totalSupply == 100, "fail update total supply");
+  }
+
   function testERC1155SupplyBurnTokenId1ShouldUpdateSupply() public {
     testERC1155Supply.mint(owner, 1, 100, "");
     testERC1155Supply.burn(owner, 1, 50);
