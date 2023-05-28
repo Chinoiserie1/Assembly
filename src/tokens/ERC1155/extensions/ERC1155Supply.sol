@@ -27,4 +27,22 @@ abstract contract ERC1155Supply is ERC1155 {
       return(0x00, 0x20)
     }
   }
+
+  /**
+   * @dev Indicates whether any token exist with a given id, or not.
+   */
+  function exists(uint256 id) public view virtual returns (bool) {
+    // return ERC1155Supply.totalSupply(id) > 0;
+    assembly {
+      mstore(0x00, id)
+      mstore(0x20, _totalSupply.slot)
+      let supply := sload(keccak256(0x00, 0x40))
+      if iszero(supply) {
+        mstore(0x00, 0)
+        return(0x00, 0x20)
+      }
+      mstore(0x00, 1)
+      return(0x00, 0x20)
+    }
+  }
 }
