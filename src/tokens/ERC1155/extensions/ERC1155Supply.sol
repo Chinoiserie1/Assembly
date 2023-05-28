@@ -8,6 +8,10 @@ import "forge-std/Test.sol";
 // bytes4(keccak256("overflow()"))
 // bytes32 constant OVERFLOW = 0x004264c300000000000000000000000000000000000000000000000000000000;
 
+// bytes4(keccak256("burnAmountExceedsTotalSupply()"))
+bytes32 constant BURN_AMOUNT_EXCEEDS_TOTAL_SUPPLY = 
+  0x9fe38c4f00000000000000000000000000000000000000000000000000000000;
+
 /**
  * @dev Extension of ERC1155 that adds tracking of total supply per id.
  *
@@ -82,6 +86,25 @@ abstract contract ERC1155Supply is ERC1155 {
             mstore(0x00, OVERFLOW)
             revert(0x00, 0x04)
           }
+          sstore(slot, updatedSupply)
+        }
+      }
+      if iszero(to) {
+        let size := mload(ids)
+        let startIds := add(ids, 0x20)
+        let startAmounts := add(amounts, 0x20)
+        // store slot _totalSupply for keccak256 for retrieve totalSupply
+        mstore(0x20, _totalSupply.slot)
+        for { let i := 0 } lt(i, size) { i := add(i, 1) } {
+          mstore(0x00, mload(add(startIds, mul(i, 0x20))))
+          let slot := keccak256(0x00, 0x40)
+          let currentSupply := sload(slot)
+          let amountBurn := mload(add(startAmounts, mul(i, 0x20)))
+          if lt(currentSupply, amountBurn) {
+            mstore(0x00, BURN_AMOUNT_EXCEEDS_TOTAL_SUPPLY)
+            revert(0x00, 0x04)
+          }
+          let updatedSupply := sub(currentSupply, amountBurn)
           sstore(slot, updatedSupply)
         }
       }
