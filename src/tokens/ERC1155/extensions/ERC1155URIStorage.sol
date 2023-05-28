@@ -41,7 +41,7 @@ abstract contract ERC1155URIStorage is ERC1155 {
       if gt(sizeTokenURI, 0) {
         if iszero(sizeBaseURI) {
           mstore(0x00, tokenURI)
-          return(0x00, add(shl(1, sizeTokenURI), tokenURI))
+          return(0x00, mload(0x40))
         }
         let ptr := mload(0x40)
         mstore(ptr, totalSize)
