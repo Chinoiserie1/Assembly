@@ -11,6 +11,24 @@ contract MyERC1155Supply is ERC1155Supply {
   function mint(address to, uint256 id, uint256 amount, bytes calldata data) external {
     _mint(to, id, amount, data);
   }
+
+  function mintBatch(address to,
+    uint256[] calldata ids,
+    uint256[] calldata amounts,
+    bytes calldata data
+  )
+    external
+  {
+    _mintBatch(to, ids, amounts, data);
+  }
+
+  function burn(address from, uint256 id, uint256 amount) external {
+    _burn(from, id, amount);
+  }
+
+  function burnBatch(address from, uint256[] calldata ids, uint256[] calldata amounts) external {
+    _burnBatch(from, ids, amounts);
+  }
 }
 
 contract TestERC1155Supply is Test {
@@ -42,5 +60,12 @@ contract TestERC1155Supply is Test {
     testERC1155Supply.mint(user1, 1, 100, "");
     uint256 totalSupply = testERC1155Supply.totalSupply(1);
     require(totalSupply == 100, "fail update total supply");
+  }
+
+  function testERC1155SupplyBurnTokenId1ShouldUpdateSupply() public {
+    testERC1155Supply.mint(owner, 1, 100, "");
+    testERC1155Supply.burn(owner, 1, 50);
+    uint256 totalSupply = testERC1155Supply.totalSupply(1);
+    require(totalSupply == 50, "fail update burn total supply");
   }
 }
