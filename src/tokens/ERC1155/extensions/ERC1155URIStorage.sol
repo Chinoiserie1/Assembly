@@ -31,8 +31,8 @@ abstract contract ERC1155URIStorage is ERC1155 {
    *   uri value set, then the result is empty.
    */
   function uri(uint256 tokenId) public view virtual override returns (string memory) {
-    string memory baseURI = getBaseURI();
-    string memory tokenURI = getTokenURIs(tokenId);
+    string memory baseURI = _getBaseURI();
+    string memory tokenURI = _getTokenURIs(tokenId);
 
     assembly {
       let sizeBaseURI := mload(baseURI)
@@ -116,7 +116,7 @@ abstract contract ERC1155URIStorage is ERC1155 {
     }
   }
 
-  function getTokenURIs(uint256 tokenId) private view returns(string memory) {
+  function _getTokenURIs(uint256 tokenId) private view returns(string memory) {
     string memory ptr;
     assembly {
       ptr := mload(0x40)
@@ -146,7 +146,7 @@ abstract contract ERC1155URIStorage is ERC1155 {
     return ptr;
   }
 
-  function getBaseURI() private view returns(string memory) {
+  function _getBaseURI() private view returns(string memory) {
     string memory ptr;
     assembly {
       ptr := mload(0x40)
@@ -171,17 +171,5 @@ abstract contract ERC1155URIStorage is ERC1155 {
       }
     }
     return ptr;
-  }
-
-  function getURI(uint256 tokenId) public view returns(string memory) {
-    return _tokenURIs[tokenId];
-  }
-
-  function getBaseURI2() public view returns(string memory) {
-    return _baseURI;
-  }
-
-  function setBaseURI2(string calldata baseURI) public {
-    _baseURI = baseURI;
   }
 }
