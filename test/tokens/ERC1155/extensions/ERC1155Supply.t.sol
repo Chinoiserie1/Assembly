@@ -5,6 +5,8 @@ import "forge-std/Test.sol";
 
 import "../../../../src/tokens/ERC1155/extensions/ERC1155Supply.sol";
 
+error burnAmountExceedsTotalSupply();
+
 contract MyERC1155Supply is ERC1155Supply {
   constructor() ERC1155("name", "symbol", "baseURI") {}
 
@@ -82,5 +84,11 @@ contract TestERC1155Supply is Test {
     testERC1155Supply.burn(owner, 1, 50);
     uint256 totalSupply = testERC1155Supply.totalSupply(1);
     require(totalSupply == 50, "fail update burn total supply");
+  }
+
+  function testERC1155SupplyBurnTokenId1WithAmountsExceedTotalSupplyShouldFail() public {
+    testERC1155Supply.mint(owner, 1, 100, "");
+    vm.expectRevert(burnAmountExceedsTotalSupply.selector);
+    testERC1155Supply.burn(owner, 1, 101);
   }
 }
