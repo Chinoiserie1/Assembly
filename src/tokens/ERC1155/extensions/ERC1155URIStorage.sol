@@ -5,6 +5,11 @@ import "../ERC1155.sol";
 
 import "forge-std/Test.sol";
 
+/**
+ * @title ERC1155 token with storage based token URI management.
+ * @author chixx.eth
+ * @notice reference https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol
+ */
 abstract contract ERC1155URIStorage is ERC1155 {
   // Optional base URI
   string private _baseURI = "";
@@ -116,6 +121,10 @@ abstract contract ERC1155URIStorage is ERC1155 {
     }
   }
 
+  /**
+   * @notice get token URI from a specific tokenID
+   * @param tokenId id of the token to get URI
+   */
   function _getTokenURIs(uint256 tokenId) private view returns(string memory) {
     string memory ptr;
     assembly {
@@ -146,6 +155,9 @@ abstract contract ERC1155URIStorage is ERC1155 {
     return ptr;
   }
 
+  /**
+   * @notice get base URI
+   */
   function _getBaseURI() private view returns(string memory) {
     string memory ptr;
     assembly {

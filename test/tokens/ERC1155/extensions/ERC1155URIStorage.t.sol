@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 
 import "../../../../src/tokens/ERC1155/extensions/ERC1155URIStorage.sol";
-// import "../../../../src/tokens/ERC1155/ERC1155.sol";
 
 contract MyERC1155URIStorage is ERC1155URIStorage {
   constructor() ERC1155("name", "symbol", "baseURI") {}
