@@ -31,7 +31,7 @@ contract TestMath is Test {
     }
   }
 
-  function testFuzz_TrySub(uint128 a, uint128 b) public pure {
+  function testFuzz_TrySub(uint256 a, uint256 b) public pure {
     vm.assume(a > 0);
     vm.assume(b > 0);
     (bool success, uint256 result) = Math.trySub(a, b);
@@ -41,5 +41,11 @@ contract TestMath is Test {
       require(success, "fail trySub");
       require(result < a, "fail try sub result");
     }
+  }
+
+  function testFuzz_trySubWithFirstValueEqualZero(uint256 b) public pure {
+    vm.assume(b > 0);
+    (bool success, ) = Math.trySub(0, b);
+    require(!success, "need to fail but dont fail");
   }
 }
