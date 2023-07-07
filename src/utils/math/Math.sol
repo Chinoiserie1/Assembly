@@ -106,4 +106,18 @@ library Math {
       return(0x00, 0x40)
     }
   }
+
+  /**
+   * @dev Returns the largest of two numbers.
+   */
+  function max(uint256 a, uint256 b) internal pure returns (uint256) {
+    assembly {
+      if gt(a, b) {
+        mstore(0x00, a)
+        return(0x00, 0x20)
+      }
+      mstore(0x00, b)
+      return(0x00, 0x20)
+    }
+  }
 }
