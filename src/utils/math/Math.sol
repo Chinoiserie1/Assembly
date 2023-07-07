@@ -36,17 +36,15 @@ library Math {
   /**
    * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
    */
-  function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-    bool success = true;
-    uint256 result;
+  function trySub(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
     assembly {
-gi      result := sub(a, b)
+      success := 1
+      result := sub(a, b)
       if gt(b, a) {
         success := 0
         result := 0
       }
     }
-    return (success, result);
   }
 
   /**

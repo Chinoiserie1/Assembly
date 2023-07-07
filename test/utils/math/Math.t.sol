@@ -22,12 +22,24 @@ contract TestMath is Test {
     vm.startPrank(owner);
   }
 
-  function testConsoleLog() public {
-    console.log("hey");
-  }
-
-  function testFuzz_TryAdd(uint128 a, uint128 b) public view {
+  function testFuzz_TryAdd(uint128 a, uint128 b) public pure {
     (bool success, uint256 result) = Math.tryAdd(a, b);
     require(success, "fail tryAdd");
+    if (a != 0 && b != 0) {
+      require(result > a, "fail get correct result");
+      require(result > b, "fail get correct result");
+    }
+  }
+
+  function testFuzz_TrySub(uint128 a, uint128 b) public pure {
+    vm.assume(a > 0);
+    vm.assume(b > 0);
+    (bool success, uint256 result) = Math.trySub(a, b);
+    if (a < b) {
+      require(!success, "fail get underflow error");
+    } else {
+      require(success, "fail trySub");
+      require(result < a, "fail try sub result");
+    }
   }
 }
