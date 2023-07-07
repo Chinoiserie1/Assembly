@@ -21,17 +21,15 @@ library Math {
   /**
    * @dev Returns the addition of two unsigned integers, with an overflow flag.
    */
-  function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+  function tryAdd(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
     assembly {
       let c := add(a, b)
-      if iszero(lt(c, a)) {
-        mstore(0x00, 0)
-        mstore(0x20, c)
-        return(0x00, 0x40)
+      success := 1
+      result := c
+      if lt(c, a) {
+        success := 0
+        result := 0
       }
-      mstore(0x00, 1)
-      mstore(0x20, c)
-      return(0x00, 0x40)
     }
   }
 
@@ -39,39 +37,37 @@ library Math {
    * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
    */
   function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    bool success = true;
+    uint256 result;
     assembly {
-      if iszero(gt(b, a)) {
-        mstore(0x00, 0)
-        mstore(0x20, 0)
-        return(0x00, 0x40)
+gi      result := sub(a, b)
+      if gt(b, a) {
+        success := 0
+        result := 0
       }
-      mstore(0x00, 1)
-      mstore(0x20, sub(a, b))
-      return(0x00, 0x40)
     }
+    return (success, result);
   }
 
   /**
    * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
    */
   function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
-    unchecked {
-      assembly {
-        if iszero(a) {
-          mstore(0x00, 1)
-          mstore(0x20, 0)
-          return(0x00, 0x40)
-        }
-        let c := mul(a, b)
-        if iszero(eq(div(c, a), b)) {
-          mstore(0x00, 0)
-          mstore(0x20, 0)
-          return(0x00, 0x40)
-        }
+    assembly {
+      if iszero(a) {
         mstore(0x00, 1)
-        mstore(0x20, c)
+        mstore(0x20, 0)
         return(0x00, 0x40)
       }
+      let c := mul(a, b)
+      if iszero(eq(div(c, a), b)) {
+        mstore(0x00, 0)
+        mstore(0x20, 0)
+        return(0x00, 0x40)
+      }
+      mstore(0x00, 1)
+      mstore(0x20, c)
+      return(0x00, 0x40)
     }
   }
 
