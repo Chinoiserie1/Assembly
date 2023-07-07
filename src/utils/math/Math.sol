@@ -50,4 +50,28 @@ library Math {
       return(0x00, 0x40)
     }
   }
+
+  /**
+   * @dev Returns the multiplication of two unsigned integers, with an overflow flag.
+   */
+  function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    unchecked {
+      assembly {
+        if iszero(a) {
+          mstore(0x00, 1)
+          mstore(0x20, 0)
+          return(0x00, 0x40)
+        }
+        let c := mul(a, b)
+        if iszero(eq(div(c, a), b)) {
+          mstore(0x00, 0)
+          mstore(0x20, 0)
+          return(0x00, 0x40)
+        }
+        mstore(0x00, 1)
+        mstore(0x20, c)
+        return(0x00, 0x40)
+      }
+    }
+  }
 }
