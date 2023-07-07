@@ -31,6 +31,12 @@ contract TestMath is Test {
     }
   }
 
+  function testTrySubWithTwoValueEqualZero() public pure {
+    (bool success, uint256 result) = Math.trySub(0, 0);
+    require(success, "fail try sub with params (0, 0)");
+    require(result == 0, "fail get result");
+  }
+
   function testFuzz_TrySub(uint256 a, uint256 b) public pure {
     vm.assume(a > 0);
     vm.assume(b > 0);
