@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// Code from openzepplin
+// Code from openzepplin in YUL
 
 /**
  * @dev Standard math utilities missing in the Solidity language.
@@ -72,6 +72,22 @@ library Math {
         mstore(0x20, c)
         return(0x00, 0x40)
       }
+    }
+  }
+
+  /**
+   * @dev Returns the division of two unsigned integers, with a division by zero flag.
+   */
+  function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    assembly {
+      if iszero(b) {
+        mstore(0x00, 0)
+        mstore(0x20, 0)
+        return(0x00, 0x40)
+      }
+      mstore(0x00, 1)
+      mstore(0x20, div(a, b))
+      return(0x00, 0x40)
     }
   }
 }
