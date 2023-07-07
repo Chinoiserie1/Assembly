@@ -120,4 +120,18 @@ library Math {
       return(0x00, 0x20)
     }
   }
+
+  /**
+   * @dev Returns the smallest of two numbers.
+   */
+  function min(uint256 a, uint256 b) internal pure returns (uint256) {
+    assembly {
+      if lt(a, b) {
+        mstore(0x00, a)
+        return(0x00, 0x20)
+      }
+      mstore(0x00, b)
+      return(0x00, 0x20)
+    }
+  }
 }
