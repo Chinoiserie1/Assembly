@@ -4,6 +4,11 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 import { Math } from "../../../src/utils/math/Math.sol";
 
+
+uint256 constant HALF_MAX_VALUE_UINT256 = (
+  0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+);
+
 contract TestMath is Test {
   uint256 internal ownerPrivateKey;
   address internal owner;
@@ -22,6 +27,12 @@ contract TestMath is Test {
     vm.startPrank(owner);
   }
 
+  function testTryAdd() public pure {
+    (bool success, uint256 result) = Math.tryAdd(0, 0);
+    require(success, "fail try add");
+    require(result == 0, "fail get result");
+  }
+
   function testFuzz_TryAdd(uint128 a, uint128 b) public pure {
     (bool success, uint256 result) = Math.tryAdd(a, b);
     require(success, "fail tryAdd");
@@ -29,6 +40,13 @@ contract TestMath is Test {
       require(result > a, "fail get correct result");
       require(result > b, "fail get correct result");
     }
+  }
+
+  function testFuzz_TryAddWithParamsOverflowShouldReturnFalse(uint256 a, uint256 b) public pure {
+    vm.assume(a > HALF_MAX_VALUE_UINT256);
+    vm.assume(b > HALF_MAX_VALUE_UINT256);
+    (bool success, ) = Math.tryAdd(a, b);
+    require(!success, "fail should be false");
   }
 
   function testTrySubWithTwoValueEqualZero() public pure {
