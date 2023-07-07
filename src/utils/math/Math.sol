@@ -90,4 +90,20 @@ library Math {
       return(0x00, 0x40)
     }
   }
+
+  /**
+   * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
+   */
+  function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    assembly {
+      if iszero(b) {
+        mstore(0x00, 0)
+        mstore(0x20, 0)
+        return(0x00, 0x40)
+      }
+      mstore(0x00, 0)
+      mstore(0x20, mod(a, b))
+      return(0x00, 0x40)
+    }
+  }
 }
