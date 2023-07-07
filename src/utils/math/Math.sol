@@ -34,4 +34,20 @@ library Math {
       return(0x00, 0x40)
     }
   }
+
+  /**
+   * @dev Returns the subtraction of two unsigned integers, with an overflow flag.
+   */
+  function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+    assembly {
+      if iszero(gt(b, a)) {
+        mstore(0x00, 0)
+        mstore(0x20, 0)
+        return(0x00, 0x40)
+      }
+      mstore(0x00, 1)
+      mstore(0x20, sub(a, b))
+      return(0x00, 0x40)
+    }
+  }
 }
