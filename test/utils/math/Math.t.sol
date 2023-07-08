@@ -110,4 +110,16 @@ contract TestMath is Test {
       require(result == a / b, "fail get exact result");
     }
   }
+
+  // TEST TRY MOD
+
+  function testFuzz_TryMod(uint256 a, uint256 b) public pure {
+    (bool success, uint256 result) = Math.tryMod(a, b);
+    require(success, "fail get div");
+    if (a == 0 || b == 0) {
+      require(result == 0, "fail with zero");
+    } else {
+      require(result == a % b, "fail get exact result");
+    }
+  }
 }
