@@ -27,6 +27,8 @@ contract TestMath is Test {
     vm.startPrank(owner);
   }
 
+  // TEST TRY ADD
+
   function testTryAdd() public pure {
     (bool success, uint256 result) = Math.tryAdd(0, 0);
     require(success, "fail try add");
@@ -48,6 +50,8 @@ contract TestMath is Test {
     (bool success, ) = Math.tryAdd(a, b);
     require(!success, "fail should be false");
   }
+
+  // TEST TRY SUB
 
   function testTrySubWithTwoValueEqualZero() public pure {
     (bool success, uint256 result) = Math.trySub(0, 0);
@@ -71,5 +75,12 @@ contract TestMath is Test {
     vm.assume(b > 0);
     (bool success, ) = Math.trySub(0, b);
     require(!success, "need to fail but dont fail");
+  }
+
+  // TEST TRY MUL
+
+  function testFuzz_TryMul(uint256 a, uint256 b) public {
+    (bool success, ) = Math.tryMul(a, b);
+    console.log(success);
   }
 }
