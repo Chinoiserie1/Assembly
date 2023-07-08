@@ -125,13 +125,21 @@ contract TestMath is Test {
 
   // TEST MAX
 
-  function testFuzz_Max(uint256 a, uint256 b) public view {
+  function testFuzz_Max(uint256 a, uint256 b) public pure {
     uint256 result = Math.max(a, b);
-    console.log(result);
     if (a > b) {
-      require(result == a, "fail get correct result - a");
+      require(result == a, "fail get correct result");
     } else {
-      require(result == b, "fail get correct result - b");
+      require(result == b, "fail get correct result");
+    }
+  }
+
+  function testFuzz_Min(uint256 a, uint256 b) public pure {
+    uint256 result = Math.min(a, b);
+    if (a > b) {
+      require(result == b, "fail get correct result");
+    } else {
+      require(result == a, "fail get correct result");
     }
   }
 }
