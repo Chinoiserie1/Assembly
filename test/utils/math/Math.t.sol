@@ -122,4 +122,16 @@ contract TestMath is Test {
       require(result == a % b, "fail get exact result");
     }
   }
+
+  // TEST MAX
+
+  function testFuzz_Max(uint256 a, uint256 b) public view {
+    uint256 result = Math.max(a, b);
+    console.log(result);
+    if (a > b) {
+      require(result == a, "fail get correct result - a");
+    } else {
+      require(result == b, "fail get correct result - b");
+    }
+  }
 }

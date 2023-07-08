@@ -96,24 +96,22 @@ library Math {
    */
   function max(uint256 a, uint256 b) internal pure returns (uint256 result) {
     assembly {
+      result := b
       if gt(a, b) {
         result := a
       }
-      result := b
     }
   }
 
   /**
    * @dev Returns the smallest of two numbers.
    */
-  function min(uint256 a, uint256 b) internal pure returns (uint256) {
+  function min(uint256 a, uint256 b) internal pure returns (uint256 result) {
     assembly {
+      result := b
       if lt(a, b) {
-        mstore(0x00, a)
-        return(0x00, 0x20)
+        result := a
       }
-      mstore(0x00, b)
-      return(0x00, 0x20)
     }
   }
 
