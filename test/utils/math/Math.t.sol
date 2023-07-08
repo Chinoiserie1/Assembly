@@ -4,7 +4,9 @@ pragma solidity ^0.8.19;
 import "forge-std/Test.sol";
 import { Math } from "../../../src/utils/math/Math.sol";
 
-
+uint256 constant MAX_VALUE_UINT256 = (
+  0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+);
 uint256 constant HALF_MAX_VALUE_UINT256 = (
   0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 );
@@ -88,5 +90,12 @@ contract TestMath is Test {
     (bool success, uint256 result) = Math.tryMul(a, b);
     require(success, "fail get mul result");
     require(result == a * b, "fail get exact result");
+  }
+
+  function testFuzz_TryMulShouldOverflow(uint256 a, uint256 b) public pure {
+    vm.assume(a > MAX_VALUE_UINT128);
+    vm.assume(b > MAX_VALUE_UINT128);
+    (bool success, ) = Math.tryMul(a, b);
+    require(!success, "Fail should overflow");
   }
 }
