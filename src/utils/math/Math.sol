@@ -72,7 +72,8 @@ library Math {
     assembly {
       success := 1
       result := div(a, b)
-      if or(iszero(a), iszero(b)) {
+      if iszero(b) {
+        success := 0
         result := 0
       }
     }

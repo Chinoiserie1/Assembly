@@ -103,10 +103,11 @@ contract TestMath is Test {
 
   function testFuzz_TryDiv(uint256 a, uint256 b) public pure {
     (bool success, uint256 result) = Math.tryDiv(a, b);
-    require(success, "fail get div");
-    if (a == 0 || b == 0) {
+    if (b == 0) {
+      require(!success, "Should fail get div");
       require(result == 0, "fail with zero");
     } else {
+      require(success, "fail get div");
       require(result == a / b, "fail get exact result");
     }
   }
@@ -151,5 +152,13 @@ contract TestMath is Test {
     uint256 result = Math.average(a, b);
     uint256 computeRes = (a & b) + (a ^ b) / 2;
     require(result == computeRes, "fail get correct result");
+  }
+
+  // TEST CEILDIV
+
+  function testFuzz_Ceildiv(uint256 a, uint256 b) public view {
+    uint256 b2 = 0;
+    uint256 a2 = 8;
+    console.log((b2 / a2));
   }
 }
