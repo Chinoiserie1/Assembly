@@ -98,4 +98,16 @@ contract TestMath is Test {
     (bool success, ) = Math.tryMul(a, b);
     require(!success, "Fail should overflow");
   }
+
+  // TEST TRY DIV
+
+  function testFuzz_TryDiv(uint256 a, uint256 b) public pure {
+    (bool success, uint256 result) = Math.tryDiv(a, b);
+    require(success, "fail get div");
+    if (a == 0 || b == 0) {
+      require(result == 0, "fail with zero");
+    } else {
+      require(result == a / b, "fail get exact result");
+    }
+  }
 }
