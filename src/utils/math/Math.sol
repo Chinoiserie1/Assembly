@@ -81,16 +81,13 @@ library Math {
   /**
    * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.
    */
-  function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {
+  function tryMod(uint256 a, uint256 b) internal pure returns (bool success, uint256 result) {
     assembly {
-      if iszero(b) {
-        mstore(0x00, 0)
-        mstore(0x20, 0)
-        return(0x00, 0x40)
+      success := 1
+      result := mod(a, b)
+      if or(iszero(a), iszero(b)) {
+        result := 0
       }
-      mstore(0x00, 0)
-      mstore(0x20, mod(a, b))
-      return(0x00, 0x40)
     }
   }
 
