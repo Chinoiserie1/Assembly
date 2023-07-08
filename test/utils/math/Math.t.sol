@@ -157,8 +157,11 @@ contract TestMath is Test {
   // TEST CEILDIV
 
   function testFuzz_Ceildiv(uint256 a, uint256 b) public view {
-    uint256 b2 = 0;
-    uint256 a2 = 8;
-    console.log((b2 / a2));
+    vm.assume(b != 0);
+    uint256 result = Math.ceilDiv(a, b);
+    uint256 computeRes = a == 0 ? 0 : (a - 1) / b + 1;
+    console.log(result);
+    console.log(computeRes);
+    require(result == computeRes, "fail get correct result");
   }
 }
