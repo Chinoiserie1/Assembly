@@ -8,6 +8,9 @@ import { Math } from "../../../src/utils/math/Math.sol";
 uint256 constant HALF_MAX_VALUE_UINT256 = (
   0x8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 );
+uint256 constant MAX_VALUE_UINT128 = (
+  0x00000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+);
 
 contract TestMath is Test {
   uint256 internal ownerPrivateKey;
@@ -79,8 +82,11 @@ contract TestMath is Test {
 
   // TEST TRY MUL
 
-  function testFuzz_TryMul(uint256 a, uint256 b) public {
-    (bool success, ) = Math.tryMul(a, b);
-    console.log(success);
+  function testFuzz_TryMul(uint256 a, uint256 b) public view {
+    a = bound(a, 0, MAX_VALUE_UINT128);
+    b = bound(b, 0, 4294967295);
+    (bool success, uint256 result) = Math.tryMul(a, b);
+    require(success, "fail get mul result");
+    require(result == a * b, "fail get exact result");
   }
 }

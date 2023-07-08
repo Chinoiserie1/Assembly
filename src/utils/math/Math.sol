@@ -54,12 +54,12 @@ library Math {
     assembly {
       success := 1
       result := mul(a, b)
-      if iszero(a) {
+      if iszero(eq(div(result, a), b)) {
         success := 0
         result := 0
       }
-      if iszero(eq(div(result, a), b)) {
-        success := 0
+      if or(iszero(a), iszero(b)) {
+        success := 1
         result := 0
       }
     }
