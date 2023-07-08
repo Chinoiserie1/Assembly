@@ -119,9 +119,11 @@ library Math {
    * @dev Returns the average of two numbers. The result is rounded towards
    * zero.
    */
-  function average(uint256 a, uint256 b) internal pure returns (uint256) {
+  function average(uint256 a, uint256 b) internal pure returns (uint256 result) {
     // (a + b) / 2 can overflow.
-    return (a & b) + (a ^ b) / 2;
+    assembly {
+      result := add(and(a, b), div(xor(a, b), 2))
+    }
   }
 
   /**
