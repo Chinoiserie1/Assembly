@@ -133,13 +133,18 @@ library Math {
    * This differs from standard division with `/` in that it rounds up instead
    * of rounding down.
    */
-  function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256) {
-    if (b == 0) {
-      // Guarantee the same behavior as in a regular Solidity division.
-      return a / b;
+  function ceilDiv(uint256 a, uint256 b) internal pure returns (uint256 result) {
+    assembly {
+      result := div(a, b)
+      if gt(mod(a, b), 0) {
+        result := add(result, 1)
+      }
+      if iszero(a) {
+        result := 0
+      }
+      if iszero(b) {
+        result := div(a, b)
+      }
     }
-
-    // (a + b - 1) / b can overflow on addition, so we distribute.
-    return a == 0 ? 0 : (a - 1) / b + 1;
   }
 }
