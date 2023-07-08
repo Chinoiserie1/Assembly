@@ -134,6 +134,8 @@ contract TestMath is Test {
     }
   }
 
+  // TEST MIN
+
   function testFuzz_Min(uint256 a, uint256 b) public pure {
     uint256 result = Math.min(a, b);
     if (a > b) {
@@ -141,5 +143,13 @@ contract TestMath is Test {
     } else {
       require(result == a, "fail get correct result");
     }
+  }
+
+  // TEST AVERAGE
+
+  function testFuzz_Average(uint256 a, uint256 b) public pure {
+    uint256 result = Math.average(a, b);
+    uint256 computeRes = (a & b) + (a ^ b) / 2;
+    require(result == computeRes, "fail get correct result");
   }
 }
