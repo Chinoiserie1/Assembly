@@ -156,7 +156,7 @@ contract TestMath is Test {
 
   // TEST CEILDIV
 
-  function testFuzz_Ceildiv(uint256 a, uint256 b) public view {
+  function testFuzz_CeilDiv(uint256 a, uint256 b) public view {
     vm.assume(b != 0);
     uint256 result = Math.ceilDiv(a, b);
     uint256 computeRes = a == 0 ? 0 : (a - 1) / b + 1;
